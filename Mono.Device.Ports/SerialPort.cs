@@ -1,4 +1,3 @@
-/* -*- Mode: Csharp; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 //
 //
 // This class has several problems:
@@ -14,7 +13,7 @@
 //     like EINTR, that should be retried
 //
 //   * Calls to the encoder that do not consume all bytes because of partial
-//     reads 
+//     reads
 //
 
 using System;
@@ -54,7 +53,7 @@ namespace Mono.IO.Ports
     enum SerialSignal
     {
         None = 0,
-        Cd = 1, // Carrier detect 
+        Cd = 1, // Carrier detect
         Cts = 2, // Clear to send
         Dsr = 4, // Data set ready
         Dtr = 8, // Data terminal ready
@@ -648,7 +647,7 @@ namespace Mono.IO.Ports
 
                 //
                 // Probe for Linux-styled devices: /dev/ttyS* or /dev/ttyUSB*
-                // 
+                //
                 foreach (string dev in ttys)
                 {
                     if (dev.StartsWith("/dev/ttyS") || dev.StartsWith("/dev/ttyUSB") || dev.StartsWith("/dev/ttyACM"))
@@ -870,7 +869,7 @@ namespace Mono.IO.Ports
 
             if (buffer.Length < 0)
                 throw new ArgumentOutOfRangeException();
-            
+
             stream?.Write(buffer);
         }
 
