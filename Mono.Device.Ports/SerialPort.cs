@@ -721,9 +721,6 @@ namespace Mono.IO.Ports
         {
             CheckOpen();
 
-            if (buffer == null)
-                throw new ArgumentNullException("buffer");
-
             if (buffer.Length == 0)
                 return 0;
 
@@ -863,9 +860,6 @@ namespace Mono.IO.Ports
         public void Write(ReadOnlySpan<byte> buffer)
         {
             CheckOpen();
-
-            if (buffer == null)
-                throw new ArgumentNullException("buffer");
 
             if (buffer.Length < 0)
                 throw new ArgumentOutOfRangeException();
