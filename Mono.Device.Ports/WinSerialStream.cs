@@ -244,7 +244,7 @@ namespace Mono.IO.Ports
         public override void Flush()
         {
             CheckDisposed();
-            // No dothing by now
+            // No do thing by now
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -263,7 +263,7 @@ namespace Mono.IO.Ports
 
         [DllImport("kernel32", SetLastError = true)]
         static extern unsafe bool GetOverlappedResult(int handle, IntPtr overlapped,
-                    ref int bytes_transfered, bool wait);
+                    ref int bytes_transferred, bool wait);
 
         public override int Read(Span<byte> buffer)
         {
@@ -342,7 +342,7 @@ namespace Mono.IO.Ports
             }
 
             // If the operation timed out, then
-            // we transfered less bytes than the requested ones
+            // we transferred less bytes than the requested ones
             if (bytes_written < buffer.Length)
                 throw new TimeoutException();
         }
