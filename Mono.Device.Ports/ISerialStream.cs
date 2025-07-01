@@ -19,7 +19,7 @@ namespace Mono.IO.Ports
         void Write(byte[] buffer, int offset, int count);
         void Write(ReadOnlySpan<byte> buffer);
 
-        void SetAttributes(int baud_rate, Parity parity, int data_bits, StopBits sb, Handshake hs);
+        void SetAttributes(int baudRate, Parity parity, int dataBits, StopBits sb, Handshake hs);
         void DiscardInBuffer();
         void DiscardOutBuffer();
         SerialSignal GetSignals();

@@ -354,14 +354,14 @@ namespace Mono.IO.Ports
         [DllImport("kernel32", SetLastError = true)]
         static extern bool SetCommState(int handle, DCB dcb);
 
-        public void SetAttributes(int baud_rate, Parity parity, int data_bits, StopBits bits, Handshake hs)
+        public void SetAttributes(int baudRate, Parity parity, int dataBits, StopBits bits, Handshake hs)
         {
             DCB dcb = new DCB();
 
             if (!GetCommState(handle, dcb))
                 ReportIOError(null);
 
-            dcb.SetValues(baud_rate, parity, data_bits, bits, hs);
+            dcb.SetValues(baudRate, parity, dataBits, bits, hs);
 
             if (!SetCommState(handle, dcb))
                 ReportIOError(null);

@@ -219,9 +219,9 @@ namespace Mono.IO.Ports
                 throw new ObjectDisposedException(GetType().FullName);
         }
 
-        public void SetAttributes(int baud_rate, Parity parity, int data_bits, StopBits sb, Handshake hs)
+        public void SetAttributes(int baudRate, Parity parity, int dataBits, StopBits sb, Handshake hs)
         {
-            if (!LibCSerialPortHelper.set_attributes(fd, baud_rate, parity, data_bits, sb, hs))
+            if (!LibCSerialPortHelper.set_attributes(fd, baudRate, parity, dataBits, sb, hs))
                 LibCSerialPortHelper.ThrowIOException();
         }
 
