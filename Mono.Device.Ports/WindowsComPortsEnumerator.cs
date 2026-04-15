@@ -23,7 +23,7 @@ namespace Mono.IO.Ports
             int dwIndex,
             char[] lpValueName,
             ref int lpcbValueName,
-            IntPtr lpReserved_MustBeZero,
+            IntPtr lpReservedMustBeZero,
             int[]? lpType,
             byte[]? lpData,
             int[]? lpcbData);
@@ -49,7 +49,11 @@ namespace Mono.IO.Ports
             try
             {
                 // if there are no serial ports at all, the registry key is not there at all
-                var errorCode = RegOpenKeyEx(HKEY_LOCAL_MACHINE, @"HARDWARE\DEVICEMAP\SERIALCOMM", 0, KEY_ENUMERATE_SUB_KEYS | KEY_READ, out var serialCommHkey);
+                var errorCode = RegOpenKeyEx(HKEY_LOCAL_MACHINE
+                    , @"HARDWARE\DEVICEMAP\SERIALCOMM"
+                    , 0
+                    , KEY_ENUMERATE_SUB_KEYS | KEY_READ
+                    , out var serialCommHkey);
                 if (errorCode != 0)
                     return r;
 
@@ -60,7 +64,14 @@ namespace Mono.IO.Ports
                     for (; ; )
                     {
                         var len = chArray.Length;
-                        errorCode = RegEnumValue(serialCommHkey, r.Count, chArray, ref len, IntPtr.Zero, null, null, null);
+                        errorCode = RegEnumValue(serialCommHkey
+                            , r.Count
+                            , chArray
+                            , ref len
+                            , IntPtr.Zero
+                            , null
+                            , null
+                            , null);
                         if (errorCode != 0)
                             break;
 
@@ -70,16 +81,12 @@ namespace Mono.IO.Ports
                         var dataLen = chArray.Length * sizeof(char);
                         errorCode = RegQueryValueEx(serialCommHkey, keyName, null, ref lpType, chArray, ref dataLen);
 
-                        if (errorCode == 0 && lpType == REG_SZ)
-                        {
-                            dataLen = dataLen / sizeof(char) - 1; // in bytes without zero terminator
+                        if (errorCode != 0 || lpType != REG_SZ) continue;
+                        dataLen = dataLen / sizeof(char) - 1; // in bytes without zero terminator
 
-                            if (dataLen > 0)
-                            {
-                                var valueString = new string(chArray, 0, dataLen);
-                                r.Add(valueString);
-                            }
-                        }
+                        if (dataLen <= 0) continue;
+                        var valueString = new string(chArray, 0, dataLen);
+                        r.Add(valueString);
                     }
                 }
                 finally

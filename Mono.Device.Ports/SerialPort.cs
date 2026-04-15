@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
+using System.Linq;
 
 namespace Mono.IO.Ports
 {
@@ -71,26 +72,25 @@ namespace Mono.IO.Ports
         private const Parity DefaultParity = Parity.None;
         private const StopBits DefaultStopBits = StopBits.One;
 
-        private bool is_open;
-        private int baud_rate;
-        private Parity parity;
-        private StopBits stop_bits;
-        private Handshake handshake;
-        private int data_bits;
-        private bool break_state = false;
-        private bool dtr_enable = false;
-        private bool rts_enable = false;
-        private ISerialStream? stream;
-        private Encoding encoding = Encoding.ASCII;
-        private string new_line = Environment.NewLine;
-        private string port_name;
-        private int read_timeout = InfiniteTimeout;
-        private int write_timeout = InfiniteTimeout;
-        private int readBufferSize = DefaultReadBufferSize;
-        private int writeBufferSize = DefaultWriteBufferSize;
-        private object error_received = new object();
-        private object data_received = new object();
-        private object pin_changed = new object();
+        private int _baudRate;
+        private Parity _parity;
+        private StopBits _stopBits;
+        private Handshake _handshake;
+        private int _dataBits;
+        private bool _breakState = false;
+        private bool _dtrEnable = false;
+        private bool _rtsEnable = false;
+        private ISerialStream? _stream;
+        private Encoding _encoding = Encoding.ASCII;
+        private string _newLine = Environment.NewLine;
+        private string _portName;
+        private int _readTimeout = InfiniteTimeout;
+        private int _writeTimeout = InfiniteTimeout;
+        private int _readBufferSize = DefaultReadBufferSize;
+        private int _writeBufferSize = DefaultWriteBufferSize;
+        private readonly object _errorReceived = new object();
+        private readonly object _dataReceived = new object();
+        private readonly object _pinChanged = new object();
 
         public SerialPort() :
             this(GetDefaultPortName(), DefaultBaudRate, DefaultParity, DefaultDataBits, DefaultStopBits)
@@ -124,16 +124,16 @@ namespace Mono.IO.Ports
 
         public SerialPort(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits)
         {
-            port_name = portName;
-            baud_rate = baudRate;
-            data_bits = dataBits;
-            stop_bits = stopBits;
-            this.parity = parity;
+            _portName = portName;
+            _baudRate = baudRate;
+            _dataBits = dataBits;
+            _stopBits = stopBits;
+            this._parity = parity;
         }
 
         private static string GetDefaultPortName()
         {
-            string[] ports = GetPortNames();
+            var ports = GetPortNames();
             if (ports.Length > 0)
             {
                 return ports[0];
@@ -156,7 +156,7 @@ namespace Mono.IO.Ports
             get
             {
                 CheckOpen();
-                return stream as Stream;
+                return _stream as Stream;
             }
         }
 
@@ -165,19 +165,16 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public int BaudRate
         {
-            get
-            {
-                return baud_rate;
-            }
+            get => _baudRate;
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (is_open)
-                    stream?.SetAttributes(value, parity, data_bits, stop_bits, handshake);
+                if (IsOpen)
+                    _stream?.SetAttributes(value, _parity, _dataBits, _stopBits, _handshake);
 
-                baud_rate = value;
+                _baudRate = value;
             }
         }
 
@@ -185,18 +182,15 @@ namespace Mono.IO.Ports
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
         public bool BreakState
         {
-            get
-            {
-                return break_state;
-            }
+            get => _breakState;
             set
             {
                 CheckOpen();
-                if (value == break_state)
+                if (value == _breakState)
                     return; // Do nothing.
 
-                stream?.SetBreakState(value);
-                break_state = value;
+                _stream?.SetBreakState(value);
+                _breakState = value;
             }
         }
 
@@ -207,7 +201,7 @@ namespace Mono.IO.Ports
             get
             {
                 CheckOpen();
-                return stream?.BytesToRead ?? -1;
+                return _stream?.BytesToRead ?? -1;
             }
         }
 
@@ -218,7 +212,7 @@ namespace Mono.IO.Ports
             get
             {
                 CheckOpen();
-                return stream?.BytesToWrite ?? -1;
+                return _stream?.BytesToWrite ?? -1;
             }
         }
 
@@ -229,7 +223,7 @@ namespace Mono.IO.Ports
             get
             {
                 CheckOpen();
-                return (stream?.GetSignals() & SerialSignal.Cd) != 0;
+                return (_stream?.GetSignals() & SerialSignal.Cd) != 0;
             }
         }
 
@@ -240,7 +234,7 @@ namespace Mono.IO.Ports
             get
             {
                 CheckOpen();
-                return (stream?.GetSignals() & SerialSignal.Cts) != 0;
+                return (_stream?.GetSignals() & SerialSignal.Cts) != 0;
             }
         }
 
@@ -249,19 +243,16 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public int DataBits
         {
-            get
-            {
-                return data_bits;
-            }
+            get => _dataBits;
             set
             {
                 if (value < 5 || value > 8)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (is_open)
-                    stream?.SetAttributes(baud_rate, parity, value, stop_bits, handshake);
+                if (IsOpen)
+                    _stream?.SetAttributes(_baudRate, _parity, value, _stopBits, _handshake);
 
-                data_bits = value;
+                _dataBits = value;
             }
         }
 
@@ -271,17 +262,11 @@ namespace Mono.IO.Ports
         [DefaultValue(false)]
         public bool DiscardNull
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
+            get => throw new NotImplementedException();
+            set => throw
                 // LAMESPEC: Msdn states that an InvalidOperationException exception
                 // is fired if the port is not open, which is *not* happening.
-
-                throw new NotImplementedException();
-            }
+                new NotImplementedException();
         }
 
         [Browsable(false)]
@@ -291,7 +276,7 @@ namespace Mono.IO.Ports
             get
             {
                 CheckOpen();
-                return (stream?.GetSignals() & SerialSignal.Dsr) != 0;
+                return (_stream?.GetSignals() & SerialSignal.Dsr) != 0;
             }
         }
 
@@ -300,18 +285,15 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public bool DtrEnable
         {
-            get
-            {
-                return dtr_enable;
-            }
+            get => _dtrEnable;
             set
             {
-                if (value == dtr_enable)
+                if (value == _dtrEnable)
                     return;
-                if (is_open)
-                    stream?.SetSignal(SerialSignal.Dtr, value);
+                if (IsOpen)
+                    _stream?.SetSignal(SerialSignal.Dtr, value);
 
-                dtr_enable = value;
+                _dtrEnable = value;
             }
         }
 
@@ -320,17 +302,8 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public Encoding Encoding
         {
-            get
-            {
-                return encoding;
-            }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-
-                encoding = value;
-            }
+            get => _encoding;
+            set => _encoding = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         [DefaultValueAttribute(Handshake.None)]
@@ -338,48 +311,36 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public Handshake Handshake
         {
-            get
-            {
-                return handshake;
-            }
+            get => _handshake;
             set
             {
                 if (value < Handshake.None || value > Handshake.RequestToSendXOnXOff)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (is_open)
-                    stream?.SetAttributes(baud_rate, parity, data_bits, stop_bits, value);
+                if (IsOpen)
+                    _stream?.SetAttributes(_baudRate, _parity, _dataBits, _stopBits, value);
 
-                handshake = value;
+                _handshake = value;
             }
         }
 
         [Browsable(false)]
-        public bool IsOpen
-        {
-            get
-            {
-                return is_open;
-            }
-        }
+        public bool IsOpen { get; private set; }
 
         [DefaultValueAttribute("\n")]
         [Browsable(false)]
         [MonitoringDescription("")]
         public string NewLine
         {
-            get
-            {
-                return new_line;
-            }
+            get => _newLine;
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 if (value.Length == 0)
-                    throw new ArgumentException("NewLine cannot be null or empty.", "value");
+                    throw new ArgumentException("NewLine cannot be null or empty.", nameof(value));
 
-                new_line = value;
+                _newLine = value;
             }
         }
 
@@ -388,19 +349,16 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public Parity Parity
         {
-            get
-            {
-                return parity;
-            }
+            get => _parity;
             set
             {
                 if (value < Parity.None || value > Parity.Space)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (is_open)
-                    stream?.SetAttributes(baud_rate, value, data_bits, stop_bits, handshake);
+                if (IsOpen)
+                    _stream?.SetAttributes(_baudRate, value, _dataBits, _stopBits, _handshake);
 
-                parity = value;
+                _parity = value;
             }
         }
 
@@ -410,14 +368,8 @@ namespace Mono.IO.Ports
         [DefaultValue(63)]
         public byte ParityReplace
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
         }
 
 
@@ -426,20 +378,17 @@ namespace Mono.IO.Ports
         [DefaultValue("COM1")] // silly Windows-ism. We should ignore it.
         public string PortName
         {
-            get
-            {
-                return port_name;
-            }
+            get => _portName;
             set
             {
-                if (is_open)
+                if (IsOpen)
                     throw new InvalidOperationException("Port name cannot be set while port is open.");
                 if (value == null)
-                    throw new ArgumentNullException("value");
-                if (value.Length == 0 || value.StartsWith("\\\\"))
-                    throw new ArgumentException("value");
+                    throw new ArgumentNullException(nameof(value));
+                if (value.Length == 0 || value.StartsWith(@"\\"))
+                    throw new ArgumentException(null, nameof(value));
 
-                port_name = value;
+                _portName = value;
             }
         }
 
@@ -448,20 +397,17 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public int ReadBufferSize
         {
-            get
-            {
-                return readBufferSize;
-            }
+            get => _readBufferSize;
             set
             {
-                if (is_open)
+                if (IsOpen)
                     throw new InvalidOperationException();
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
                 if (value <= DefaultReadBufferSize)
                     return;
 
-                readBufferSize = value;
+                _readBufferSize = value;
             }
         }
 
@@ -470,19 +416,16 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public int ReadTimeout
         {
-            get
-            {
-                return read_timeout;
-            }
+            get => _readTimeout;
             set
             {
                 if (value < 0 && value != InfiniteTimeout)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (is_open && stream != null)
-                    stream.ReadTimeout = value;
+                if (IsOpen && _stream != null)
+                    _stream.ReadTimeout = value;
 
-                read_timeout = value;
+                _readTimeout = value;
             }
         }
 
@@ -492,14 +435,11 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public int ReceivedBytesThreshold
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get => throw new NotImplementedException();
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 throw new NotImplementedException();
             }
@@ -510,18 +450,15 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public bool RtsEnable
         {
-            get
-            {
-                return rts_enable;
-            }
+            get => _rtsEnable;
             set
             {
-                if (value == rts_enable)
+                if (value == _rtsEnable)
                     return;
-                if (is_open)
-                    stream?.SetSignal(SerialSignal.Rts, value);
+                if (IsOpen)
+                    _stream?.SetSignal(SerialSignal.Rts, value);
 
-                rts_enable = value;
+                _rtsEnable = value;
             }
         }
 
@@ -530,19 +467,16 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public StopBits StopBits
         {
-            get
-            {
-                return stop_bits;
-            }
+            get => _stopBits;
             set
             {
                 if (value < StopBits.One || value > StopBits.OnePointFive)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (is_open)
-                    stream?.SetAttributes(baud_rate, parity, data_bits, value, handshake);
+                if (IsOpen)
+                    _stream?.SetAttributes(_baudRate, _parity, _dataBits, value, _handshake);
 
-                stop_bits = value;
+                _stopBits = value;
             }
         }
 
@@ -551,20 +485,17 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public int WriteBufferSize
         {
-            get
-            {
-                return writeBufferSize;
-            }
+            get => _writeBufferSize;
             set
             {
-                if (is_open)
+                if (IsOpen)
                     throw new InvalidOperationException();
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
                 if (value <= DefaultWriteBufferSize)
                     return;
 
-                writeBufferSize = value;
+                _writeBufferSize = value;
             }
         }
 
@@ -573,19 +504,16 @@ namespace Mono.IO.Ports
         [MonitoringDescription("")]
         public int WriteTimeout
         {
-            get
-            {
-                return write_timeout;
-            }
+            get => _writeTimeout;
             set
             {
                 if (value < 0 && value != InfiniteTimeout)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (is_open && stream != null)
-                    stream.WriteTimeout = value;
+                if (IsOpen && _stream != null)
+                    _stream.WriteTimeout = value;
 
-                write_timeout = value;
+                _writeTimeout = value;
             }
         }
 
@@ -598,12 +526,12 @@ namespace Mono.IO.Ports
 
         private void CloseStream()
         {
-            if (!is_open)
+            if (!IsOpen)
                 return;
 
-            is_open = false;
-            stream?.Close();
-            stream = null;
+            IsOpen = false;
+            _stream?.Close();
+            _stream = null;
         }
 
         protected override void Dispose(bool disposing)
@@ -614,8 +542,8 @@ namespace Mono.IO.Ports
             }
             else
             {
-                is_open = false;
-                stream = null;
+                IsOpen = false;
+                _stream = null;
             }
 
             base.Dispose(disposing);
@@ -624,71 +552,63 @@ namespace Mono.IO.Ports
         public void DiscardInBuffer()
         {
             CheckOpen();
-            stream?.DiscardInBuffer();
+            _stream?.DiscardInBuffer();
         }
 
         public void DiscardOutBuffer()
         {
             CheckOpen();
-            stream?.DiscardOutBuffer();
+            _stream?.DiscardOutBuffer();
         }
 
         public static string[] GetPortNames()
         {
-            List<string> serial_ports;
+            List<string> serialPorts;
 
             // Are we on Unix?
             if (IsLinux)
             {
-                serial_ports = new List<string>();
+                serialPorts = new List<string>();
 
-                string[] ttys = Directory.GetFiles("/dev/", "tty*");
-                bool linux_style = false;
+                var ttys = Directory.GetFiles("/dev/", "tty*");
+                var linuxStyle = ttys.Any(dev => dev.StartsWith("/dev/ttyS") || dev.StartsWith("/dev/ttyUSB") || dev.StartsWith("/dev/ttyACM"));
 
                 //
                 // Probe for Linux-styled devices: /dev/ttyS* or /dev/ttyUSB*
                 //
-                foreach (string dev in ttys)
-                {
-                    if (dev.StartsWith("/dev/ttyS") || dev.StartsWith("/dev/ttyUSB") || dev.StartsWith("/dev/ttyACM"))
-                    {
-                        linux_style = true;
-                        break;
-                    }
-                }
 
-                foreach (string dev in ttys)
+                foreach (var dev in ttys)
                 {
-                    if (linux_style)
+                    if (linuxStyle)
                     {
                         if (dev.StartsWith("/dev/ttyS") || dev.StartsWith("/dev/ttyUSB") || dev.StartsWith("/dev/ttyACM"))
-                            serial_ports.Add(dev);
+                            serialPorts.Add(dev);
                     }
                     else
                     {
                         if (dev != "/dev/tty" && dev.StartsWith("/dev/tty") && !dev.StartsWith("/dev/ttyC"))
-                            serial_ports.Add(dev);
+                            serialPorts.Add(dev);
                     }
                 }
             }
             else if (IsWindows)
             {
-                serial_ports = WindowsComPortsEnumerator.GetPorts();
+                serialPorts = WindowsComPortsEnumerator.GetPorts();
             }
             else
             {
                 // what is this
-                serial_ports = new List<string>();
+                serialPorts = new List<string>();
             }
 
-            return serial_ports.ToArray();
+            return serialPorts.ToArray();
         }
 
         private static bool IsLinux
         {
             get
             {
-                PlatformID id = Environment.OSVersion.Platform;
+                var id = Environment.OSVersion.Platform;
                 return id == PlatformID.Unix || id == PlatformID.MacOSX || (int)id == 128; // 4, 6, but what is 128?
             }
         }
@@ -697,24 +617,24 @@ namespace Mono.IO.Ports
         {
             get
             {
-                PlatformID id = Environment.OSVersion.Platform;
+                var id = Environment.OSVersion.Platform;
                 return id == PlatformID.Win32Windows || id == PlatformID.Win32NT; // WinCE not supported
             }
         }
 
         public void Open()
         {
-            if (is_open)
+            if (IsOpen)
                 throw new InvalidOperationException("Port is already open");
 
             if (IsWindows) // Use windows kernel32 backend
-                stream = new WinSerialStream(port_name, baud_rate, data_bits, parity, stop_bits, dtr_enable,
-                    rts_enable, handshake, read_timeout, write_timeout, readBufferSize, writeBufferSize);
+                _stream = new WinSerialStream(_portName, _baudRate, _dataBits, _parity, _stopBits, _dtrEnable,
+                    _rtsEnable, _handshake, _readTimeout, _writeTimeout, _readBufferSize, _writeBufferSize);
             else // Use standard unix backend
-                stream = new SerialPortStream(port_name, baud_rate, data_bits, parity, stop_bits, dtr_enable,
-                    rts_enable, handshake, read_timeout, write_timeout, readBufferSize, writeBufferSize);
+                _stream = new SerialPortStream(_portName, _baudRate, _dataBits, _parity, _stopBits, _dtrEnable,
+                    _rtsEnable, _handshake, _readTimeout, _writeTimeout, _readBufferSize, _writeBufferSize);
 
-            is_open = true;
+            IsOpen = true;
         }
 
         public int Read(Span<byte> buffer)
@@ -727,10 +647,7 @@ namespace Mono.IO.Ports
             if (buffer.Length < 0)
                 throw new ArgumentOutOfRangeException(nameof(buffer),"buffer length less than zero.");
 
-            if (stream == null)
-                throw new NullReferenceException("stream is null");
-
-            return stream.Read(buffer);
+            return _stream?.Read(buffer) ?? throw new NullReferenceException("stream is null");
         }
 
         public int Read(byte[] buffer, int offset, int count)
@@ -745,13 +662,14 @@ namespace Mono.IO.Ports
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
-            if (offset < 0 || count < 0)
-#pragma warning disable CA2208 // Instantiate argument exceptions correctly
-                throw new ArgumentOutOfRangeException("offset or count less than zero.");
+            if (offset < 0 )
+                throw new ArgumentOutOfRangeException(nameof(offset), $"offset less than zero, count = {count}.");
+
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), $"count less than zero, offset = {offset}.");
 
             if (buffer.Length - offset < count)
-                throw new ArgumentException("offset+count", "The size of the buffer is less than offset + count.");
-#pragma warning restore CA2208 // Instantiate argument exceptions correctly
+                throw new ArgumentOutOfRangeException(nameof(buffer), "buffer is less than offset + count.");
 
             int c, i;
             for (i = 0; i < count && (c = ReadChar()) != -1; i++)
@@ -760,12 +678,12 @@ namespace Mono.IO.Ports
             return i;
         }
 
-        private readonly byte[] read_byte_buff = new byte[1];
+        private readonly byte[] _readByteBuff = new byte[1];
 
-        internal int ReadByteInternal()
+        private int ReadByteInternal()
         {
-            if (stream?.Read(read_byte_buff, 0, 1) > 0)
-                return read_byte_buff[0];
+            if (_stream?.Read(_readByteBuff, 0, 1) > 0)
+                return _readByteBuff[0];
 
             return -1;
         }
@@ -780,16 +698,16 @@ namespace Mono.IO.Ports
         {
             CheckOpen();
 
-            byte[] buffer = new byte[16];
-            int i = 0;
+            var buffer = new byte[16];
+            var i = 0;
 
             do
             {
-                int b = ReadByteInternal();
+                var b = ReadByteInternal();
                 if (b == -1)
                     return -1;
                 buffer[i++] = (byte)b;
-                char[] c = encoding.GetChars(buffer, 0, 1);
+                var c = _encoding.GetChars(buffer, 0, 1);
                 if (c.Length > 0)
                     return (int)c[0];
             } while (i < buffer.Length);
@@ -801,61 +719,61 @@ namespace Mono.IO.Ports
         {
             CheckOpen();
 
-            int count = BytesToRead;
-            byte[] bytes = new byte[count];
+            var count = BytesToRead;
+            var bytes = new byte[count];
 
-            if (stream == null)
+            if (_stream == null)
                 throw new NullReferenceException("stream is null");
 
-            int n = stream.Read(bytes, 0, count);
-            return new String(encoding.GetChars(bytes, 0, n));
+            var n = _stream.Read(bytes, 0, count);
+            return new string(_encoding.GetChars(bytes, 0, n));
         }
 
         public string ReadLine()
         {
-            return ReadTo(new_line);
+            return ReadTo(_newLine);
         }
 
         public string ReadTo(string value)
         {
             CheckOpen();
             if (value == null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
             if (value.Length == 0)
                 throw new ArgumentException("value");
 
             // Turn into byte array, so we can compare
-            byte[] byte_value = encoding.GetBytes(value);
-            int current = 0;
-            List<byte> seen = new List<byte>();
+            var byteValue = _encoding.GetBytes(value);
+            var current = 0;
+            var seen = new List<byte>();
 
             while (true)
             {
-                int n = ReadByteInternal();
+                var n = ReadByteInternal();
                 if (n == -1)
                     break;
                 seen.Add((byte)n);
-                if (n == byte_value[current])
+                if (n == byteValue[current])
                 {
                     current++;
-                    if (current == byte_value.Length)
-                        return encoding.GetString(seen.ToArray(), 0, seen.Count - byte_value.Length);
+                    if (current == byteValue.Length)
+                        return _encoding.GetString(seen.ToArray(), 0, seen.Count - byteValue.Length);
                 }
                 else
                 {
-                    current = (byte_value[0] == n) ? 1 : 0;
+                    current = (byteValue[0] == n) ? 1 : 0;
                 }
             }
-            return encoding.GetString(seen.ToArray());
+            return _encoding.GetString(seen.ToArray());
         }
 
         public void Write(string text)
         {
             CheckOpen();
             if (text == null)
-                throw new ArgumentNullException("text");
+                throw new ArgumentNullException(nameof(text));
 
-            byte[] buffer = encoding.GetBytes(text);
+            var buffer = _encoding.GetBytes(text);
             Write(buffer, 0, buffer.Length);
         }
 
@@ -864,102 +782,103 @@ namespace Mono.IO.Ports
             CheckOpen();
 
             if (buffer.Length < 0)
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(buffer), "buffer length less than zero.");
 
-            stream?.Write(buffer);
+            _stream?.Write(buffer);
         }
 
         public void Write(byte[] buffer, int offset, int count)
         {
             CheckOpen();
             if (buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
-            if (offset < 0 || count < 0)
-                throw new ArgumentOutOfRangeException();
+            if (offset < 0 )
+                throw new ArgumentOutOfRangeException(nameof(offset), $"offset less than zero, count = {count}.");
+
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), $"count less than zero, offset = {offset}.");
 
             if (buffer.Length - offset < count)
-                throw new ArgumentException("offset+count",
-                                 "The size of the buffer is less than offset + count.");
+                throw new ArgumentOutOfRangeException(nameof(buffer), "buffer is less than offset + count.");
 
-            stream?.Write(buffer, offset, count);
+            _stream?.Write(buffer, offset, count);
         }
 
         public void Write(char[] buffer, int offset, int count)
         {
             CheckOpen();
             if (buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
-            if (offset < 0 || count < 0)
-                throw new ArgumentOutOfRangeException();
+            if (offset < 0 )
+                throw new ArgumentOutOfRangeException(nameof(offset), $"offset less than zero, count = {count}.");
+
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), $"count less than zero, offset = {offset}.");
 
             if (buffer.Length - offset < count)
-                throw new ArgumentException("offset+count",
-                                 "The size of the buffer is less than offset + count.");
+                throw new ArgumentOutOfRangeException(nameof(buffer), "buffer is less than offset + count.");
 
-            byte[] bytes = encoding.GetBytes(buffer, offset, count);
-            stream?.Write(bytes, 0, bytes.Length);
+            byte[] bytes = _encoding.GetBytes(buffer, offset, count);
+            _stream?.Write(bytes, 0, bytes.Length);
         }
 
         public void WriteLine(string text)
         {
-            Write(text + new_line);
+            Write(text + _newLine);
         }
 
         private void CheckOpen()
         {
-            if (!is_open)
+            if (!IsOpen)
                 throw new InvalidOperationException("Specified port is not open.");
         }
 
         internal void OnErrorReceived(SerialErrorReceivedEventArgs args)
         {
-            SerialErrorReceivedEventHandler handler =
-                (SerialErrorReceivedEventHandler)Events[error_received];
+            var handler =
+                (SerialErrorReceivedEventHandler)Events[_errorReceived];
 
-            if (handler != null)
-                handler(this, args);
+            handler?.Invoke(this, args);
         }
 
         internal void OnDataReceived(SerialDataReceivedEventArgs args)
         {
-            SerialDataReceivedEventHandler handler =
-                (SerialDataReceivedEventHandler)Events[data_received];
+            var handler =
+                (SerialDataReceivedEventHandler)Events[_dataReceived];
 
-            if (handler != null)
-                handler(this, args);
+            handler?.Invoke(this, args);
         }
 
         internal void OnDataReceived(SerialPinChangedEventArgs args)
         {
-            SerialPinChangedEventHandler handler =
-                (SerialPinChangedEventHandler)Events[pin_changed];
+            var handler =
+                (SerialPinChangedEventHandler)Events[_pinChanged];
 
-            if (handler != null)
-                handler(this, args);
+            handler?.Invoke(this, args);
         }
 
         // events
         [MonitoringDescription("")]
         public event SerialErrorReceivedEventHandler ErrorReceived
         {
-            add { Events.AddHandler(error_received, value); }
-            remove { Events.RemoveHandler(error_received, value); }
+            add => Events.AddHandler(_errorReceived, value);
+            remove => Events.RemoveHandler(_errorReceived, value);
         }
 
         [MonitoringDescription("")]
         public event SerialPinChangedEventHandler PinChanged
         {
-            add { Events.AddHandler(pin_changed, value); }
-            remove { Events.RemoveHandler(pin_changed, value); }
+            add => Events.AddHandler(_pinChanged, value);
+            remove => Events.RemoveHandler(_pinChanged, value);
         }
 
         [MonitoringDescription("")]
         public event SerialDataReceivedEventHandler DataReceived
         {
-            add { Events.AddHandler(data_received, value); }
-            remove { Events.RemoveHandler(data_received, value); }
+            add => Events.AddHandler(_dataReceived, value);
+            remove => Events.RemoveHandler(_dataReceived, value);
         }
     }
 
