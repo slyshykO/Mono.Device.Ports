@@ -725,7 +725,7 @@ namespace Mono.IO.Ports
                 return 0;
 
             if (buffer.Length < 0)
-                throw new ArgumentOutOfRangeException("offset or count less than zero.");
+                throw new ArgumentOutOfRangeException(nameof(buffer),"buffer length less than zero.");
 
             if (stream == null)
                 throw new NullReferenceException("stream is null");
@@ -743,13 +743,15 @@ namespace Mono.IO.Ports
             CheckOpen();
 
             if (buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             if (offset < 0 || count < 0)
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
                 throw new ArgumentOutOfRangeException("offset or count less than zero.");
 
             if (buffer.Length - offset < count)
                 throw new ArgumentException("offset+count", "The size of the buffer is less than offset + count.");
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
             int c, i;
             for (i = 0; i < count && (c = ReadChar()) != -1; i++)
@@ -760,7 +762,7 @@ namespace Mono.IO.Ports
 
         readonly byte[] read_byte_buff = new byte[1];
 
-        internal int read_byte()
+        internal int ReadByteInternal()
         {
             if (stream?.Read(read_byte_buff, 0, 1) > 0)
                 return read_byte_buff[0];
@@ -771,7 +773,7 @@ namespace Mono.IO.Ports
         public int ReadByte()
         {
             CheckOpen();
-            return read_byte();
+            return ReadByteInternal();
         }
 
         public int ReadChar()
@@ -783,7 +785,7 @@ namespace Mono.IO.Ports
 
             do
             {
-                int b = read_byte();
+                int b = ReadByteInternal();
                 if (b == -1)
                     return -1;
                 buffer[i++] = (byte)b;
@@ -829,7 +831,7 @@ namespace Mono.IO.Ports
 
             while (true)
             {
-                int n = read_byte();
+                int n = ReadByteInternal();
                 if (n == -1)
                     break;
                 seen.Add((byte)n);
