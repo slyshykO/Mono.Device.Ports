@@ -20,6 +20,6 @@ namespace Mono.IO.Ports
             }
         }
 
-        SerialData eventType;
+        readonly SerialData eventType;
     }
 }

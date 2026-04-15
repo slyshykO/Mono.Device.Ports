@@ -19,7 +19,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        SerialPinChange eventType;
+        readonly SerialPinChange eventType;
     }
 }
 

@@ -21,7 +21,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        SerialError eventType;
+        readonly SerialError eventType;
     }
 }
 
