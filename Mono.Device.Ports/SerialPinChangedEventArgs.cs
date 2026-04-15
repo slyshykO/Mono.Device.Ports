@@ -6,20 +6,12 @@ namespace Mono.IO.Ports
     {
         internal SerialPinChangedEventArgs(SerialPinChange eventType)
         {
-            this.eventType = eventType;
+            this.EventType = eventType;
         }
 
         // properties
 
-        public SerialPinChange EventType
-        {
-            get
-            {
-                return eventType;
-            }
-        }
-
-        readonly SerialPinChange eventType;
+        public SerialPinChange EventType { get; }
     }
 }
 

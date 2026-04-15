@@ -8,20 +8,12 @@ namespace Mono.IO.Ports
 
         internal SerialErrorReceivedEventArgs(SerialError eventType)
         {
-            this.eventType = eventType;
+            this.EventType = eventType;
         }
 
         // properties
 
-        public SerialError EventType
-        {
-            get
-            {
-                return eventType;
-            }
-        }
-
-        readonly SerialError eventType;
+        public SerialError EventType { get; }
     }
 }
 

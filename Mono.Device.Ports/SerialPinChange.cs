@@ -13,7 +13,7 @@ namespace Mono.IO.Ports
     {
         CtsChanged = 8,
         DsrChanged = 16,
-        CDChanged = 32,
+        CdChanged = 32,
         Break = 64,
         Ring = 256
     }

@@ -11,10 +11,10 @@ namespace Mono.IO.Ports
 {
     public enum SerialError
     {
-        RXOver = 1,
+        RxOver = 1,
         Overrun = 2,
-        RXParity = 4,
+        RxParity = 4,
         Frame = 8,
-        TXFull = 256
+        TxFull = 256
     }
 }

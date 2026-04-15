@@ -7,19 +7,11 @@ namespace Mono.IO.Ports
     {
         internal SerialDataReceivedEventArgs(SerialData eventType)
         {
-            this.eventType = eventType;
+            this.EventType = eventType;
         }
 
         // properties
 
-        public SerialData EventType
-        {
-            get
-            {
-                return eventType;
-            }
-        }
-
-        readonly SerialData eventType;
+        public SerialData EventType { get; }
     }
 }

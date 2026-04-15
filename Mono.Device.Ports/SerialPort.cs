@@ -50,7 +50,7 @@ namespace Mono.IO.Ports
         RequestToSendXOnXOff
     }
 
-    enum SerialSignal
+    internal enum SerialSignal
     {
         None = 0,
         Cd = 1, // Carrier detect
@@ -64,33 +64,33 @@ namespace Mono.IO.Ports
     public class SerialPort : Component
     {
         public const int InfiniteTimeout = -1;
-        const int DefaultReadBufferSize = 4096;
-        const int DefaultWriteBufferSize = 2048;
-        const int DefaultBaudRate = 9600;
-        const int DefaultDataBits = 8;
-        const Parity DefaultParity = Parity.None;
-        const StopBits DefaultStopBits = StopBits.One;
+        private const int DefaultReadBufferSize = 4096;
+        private const int DefaultWriteBufferSize = 2048;
+        private const int DefaultBaudRate = 9600;
+        private const int DefaultDataBits = 8;
+        private const Parity DefaultParity = Parity.None;
+        private const StopBits DefaultStopBits = StopBits.One;
 
-        bool is_open;
-        int baud_rate;
-        Parity parity;
-        StopBits stop_bits;
-        Handshake handshake;
-        int data_bits;
-        bool break_state = false;
-        bool dtr_enable = false;
-        bool rts_enable = false;
-        ISerialStream? stream;
-        Encoding encoding = Encoding.ASCII;
-        string new_line = Environment.NewLine;
-        string port_name;
-        int read_timeout = InfiniteTimeout;
-        int write_timeout = InfiniteTimeout;
-        int readBufferSize = DefaultReadBufferSize;
-        int writeBufferSize = DefaultWriteBufferSize;
-        object error_received = new object();
-        object data_received = new object();
-        object pin_changed = new object();
+        private bool is_open;
+        private int baud_rate;
+        private Parity parity;
+        private StopBits stop_bits;
+        private Handshake handshake;
+        private int data_bits;
+        private bool break_state = false;
+        private bool dtr_enable = false;
+        private bool rts_enable = false;
+        private ISerialStream? stream;
+        private Encoding encoding = Encoding.ASCII;
+        private string new_line = Environment.NewLine;
+        private string port_name;
+        private int read_timeout = InfiniteTimeout;
+        private int write_timeout = InfiniteTimeout;
+        private int readBufferSize = DefaultReadBufferSize;
+        private int writeBufferSize = DefaultWriteBufferSize;
+        private object error_received = new object();
+        private object data_received = new object();
+        private object pin_changed = new object();
 
         public SerialPort() :
             this(GetDefaultPortName(), DefaultBaudRate, DefaultParity, DefaultDataBits, DefaultStopBits)
@@ -131,7 +131,7 @@ namespace Mono.IO.Ports
             this.parity = parity;
         }
 
-        static string GetDefaultPortName()
+        private static string GetDefaultPortName()
         {
             string[] ports = GetPortNames();
             if (ports.Length > 0)
@@ -684,7 +684,7 @@ namespace Mono.IO.Ports
             return serial_ports.ToArray();
         }
 
-        static bool IsLinux
+        private static bool IsLinux
         {
             get
             {
@@ -693,7 +693,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        static bool IsWindows
+        private static bool IsWindows
         {
             get
             {
@@ -760,7 +760,7 @@ namespace Mono.IO.Ports
             return i;
         }
 
-        readonly byte[] read_byte_buff = new byte[1];
+        private readonly byte[] read_byte_buff = new byte[1];
 
         internal int ReadByteInternal()
         {
@@ -907,7 +907,7 @@ namespace Mono.IO.Ports
             Write(text + new_line);
         }
 
-        void CheckOpen()
+        private void CheckOpen()
         {
             if (!is_open)
                 throw new InvalidOperationException("Specified port is not open.");
