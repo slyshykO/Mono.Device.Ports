@@ -140,7 +140,7 @@ namespace Mono.IO.Ports
             }
             else
             {
-                if (IsLinux)
+                if (isUnix)
                     return "ttyS0"; // Default for Unix
                 else if (IsWindows)
                     return "COM1"; // Default for Windows
@@ -563,13 +563,14 @@ namespace Mono.IO.Ports
 
         public static string[] GetPortNames()
         {
-            List<string> serialPorts;
+            if (IsWindows)
+                return WindowsComPortsEnumerator.GetPorts().ToArray();
+
+            var serialPorts = new List<string>();
 
             // Are we on Unix?
-            if (IsLinux)
+            if (isUnix)
             {
-                serialPorts = new List<string>();
-
                 var ttys = Directory.GetFiles("/dev/", "tty*");
                 var linuxStyle = ttys.Any(dev => dev.StartsWith("/dev/ttyS") || dev.StartsWith("/dev/ttyUSB") || dev.StartsWith("/dev/ttyACM"));
 
@@ -591,25 +592,16 @@ namespace Mono.IO.Ports
                     }
                 }
             }
-            else if (IsWindows)
-            {
-                serialPorts = WindowsComPortsEnumerator.GetPorts();
-            }
-            else
-            {
-                // what is this
-                serialPorts = new List<string>();
-            }
 
             return serialPorts.ToArray();
         }
 
-        private static bool IsLinux
+        private static bool isUnix
         {
             get
             {
                 var id = Environment.OSVersion.Platform;
-                return id == PlatformID.Unix || id == PlatformID.MacOSX || (int)id == 128; // 4, 6, but what is 128?
+                return id == PlatformID.Unix || id == PlatformID.MacOSX;
             }
         }
 
@@ -633,9 +625,11 @@ namespace Mono.IO.Ports
             if (IsWindows) // Use windows kernel32 backend
                 _stream = new WinSerialStream(_portName, _baudRate, _dataBits, _parity, _stopBits, _dtrEnable,
                     _rtsEnable, _handshake, _readTimeout, _writeTimeout, _readBufferSize, _writeBufferSize);
-            else // Use standard unix backend
+            else if (isUnix) // Use unix termios backend
                 _stream = new SerialPortStream(_portName, _baudRate, _dataBits, _parity, _stopBits, _dtrEnable,
                     _rtsEnable, _handshake, _readTimeout, _writeTimeout, _readBufferSize, _writeBufferSize);
+            else
+                throw new PlatformNotSupportedException("SerialPort is not supported on this platform");
 
             IsOpen = true;
         }
