@@ -642,7 +642,7 @@ namespace Mono.IO.Ports
                 return 0;
 
             if (buffer.Length < 0)
-                throw new ArgumentOutOfRangeException(nameof(buffer),"buffer length less than zero.");
+                throw new ArgumentOutOfRangeException(nameof(buffer), "buffer length less than zero.");
 
             return _stream?.Read(buffer) ?? throw new NullReferenceException("stream is null");
         }
@@ -659,7 +659,7 @@ namespace Mono.IO.Ports
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
-            if (offset < 0 )
+            if (offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset), $"offset less than zero, count = {count}.");
 
             if (count < 0)
@@ -790,7 +790,7 @@ namespace Mono.IO.Ports
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
-            if (offset < 0 )
+            if (offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset), $"offset less than zero, count = {count}.");
 
             if (count < 0)
@@ -808,7 +808,7 @@ namespace Mono.IO.Ports
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
-            if (offset < 0 )
+            if (offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset), $"offset less than zero, count = {count}.");
 
             if (count < 0)

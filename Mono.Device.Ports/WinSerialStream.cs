@@ -476,9 +476,9 @@ namespace Mono.IO.Ports
                     flag = ClearRts;
             else
                 if (value)
-                flag = SetDtr;
-            else
-                flag = ClearDtr;
+                    flag = SetDtr;
+                else
+                    flag = ClearDtr;
 
             if (!EscapeCommFunction(handle, flag))
                 ReportIOError(null);
