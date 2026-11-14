@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Oleksiy Slyshyk
+// SPDX-License-Identifier: MIT
+
 #include "serial.h"
 #include <asm/termbits.h>
 #include <asm/ioctls.h>

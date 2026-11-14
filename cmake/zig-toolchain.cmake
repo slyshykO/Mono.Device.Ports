@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Oleksiy Slyshyk
+# SPDX-License-Identifier: MIT
+
 include("${CMAKE_CURRENT_LIST_DIR}/FindZig.cmake")
 if(NOT ZIG_EXECUTABLE)
     mdp_find_zig()

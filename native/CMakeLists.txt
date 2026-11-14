@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Oleksiy Slyshyk
+# SPDX-License-Identifier: MIT
+
 if(NOT CMAKE_SYSTEM_NAME MATCHES "^(Linux|Darwin)$")
     message(FATAL_ERROR "The native helper targets Linux/macOS. Windows uses the managed Win32 backend; use the Zig toolchain to cross-compile for Linux.")
 endif()

@@ -1,5 +1,13 @@
-# Discovery follows orange-iot-thermometer/soft/xtask: an explicit ZIG_BIN,
-# otherwise the newest working semantic version across known roots and PATH.
+# Copyright (c) 2026 Oleksiy Slyshyk
+# SPDX-License-Identifier: MIT
+
+# Validate a Zig version string in MAJOR.MINOR.PATCH format, optionally followed
+# by -prerelease identifiers and +build metadata. The regular expression checks
+# the overall format, rejects leading zeros in the three version numbers, and
+# allows nonempty, dot-separated ASCII alphanumeric or hyphen identifiers.
+# A second check rejects leading zeros in purely numeric prerelease identifiers;
+# numeric build identifiers may have leading zeros. Store TRUE or FALSE in the
+# variable named by result in the caller's scope.
 function(mdp_valid_zig_version version result)
     set(valid FALSE)
     if("${version}" MATCHES "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-([0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*))?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$")

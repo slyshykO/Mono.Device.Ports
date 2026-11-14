@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Oleksiy Slyshyk
+// SPDX-License-Identifier: MIT
+
 /* Keep kernel termios definitions separate from libc's <termios.h>. */
 #include <asm/termbits.h>
 #include <asm/ioctls.h>

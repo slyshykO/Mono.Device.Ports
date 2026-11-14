@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Oleksiy Slyshyk
+// SPDX-License-Identifier: MIT
+
 using System;
 using System.IO;
 using System.Runtime.InteropServices;

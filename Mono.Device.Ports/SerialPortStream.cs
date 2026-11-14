@@ -1,5 +1,7 @@
 // Authors: Chris Toshok, Carlos Alberto Cortez
 // (c) Copyright 2006 Novell, Inc.
+// Copyright (c) 2026 Oleksiy Slyshyk
+// SPDX-License-Identifier: MIT
 
 using System;
 using System.IO;

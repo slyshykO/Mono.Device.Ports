@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Oleksiy Slyshyk
+// SPDX-License-Identifier: MIT
+
 #ifndef MDP_BAUD_RATES_H
 #define MDP_BAUD_RATES_H
 

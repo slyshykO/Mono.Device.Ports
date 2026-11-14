@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Oleksiy Slyshyk
+# SPDX-License-Identifier: MIT
+
 cmake_minimum_required(VERSION 3.21)
 include("${CMAKE_CURRENT_LIST_DIR}/../FindZig.cmake")
 foreach(pair "0.15.10|0.15.9" "0.16.0-dev.100+aaaa|0.16.0-dev.9+ffff" "0.16.0|0.16.0-dev.100" "0.16.0-beta|0.16.0-alpha" "0.16.0-dev.1|0.16.0-dev")

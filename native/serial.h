@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Oleksiy Slyshyk
+// SPDX-License-Identifier: MIT
+
 #ifndef MDP_SERIAL_H
 #define MDP_SERIAL_H
 
