@@ -8,13 +8,13 @@ using System.IO;
 
 namespace Mono.IO.Ports
 {
-    internal class SerialPortStream : Stream, ISerialStream
+    internal class UnixSerialStream : Stream, ISerialStream
     {
         private readonly SafeSerialHandle _handle;
         private int _readTimeout;
         private int _writeTimeout;
 
-        public SerialPortStream(string portName, int baudRate, int dataBits, Parity parity, StopBits stopBits,
+        public UnixSerialStream(string portName, int baudRate, int dataBits, Parity parity, StopBits stopBits,
             bool dtrEnable, bool rtsEnable, Handshake handshake, int readTimeout, int writeTimeout,
             int readBufferSize, int writeBufferSize)
         {
@@ -109,7 +109,7 @@ namespace Mono.IO.Ports
 
         private void CheckDisposed()
         {
-            if (_handle.IsClosed) throw new ObjectDisposedException(nameof(SerialPortStream));
+            if (_handle.IsClosed) throw new ObjectDisposedException(nameof(UnixSerialStream));
         }
 
         public void SetAttributes(int baudRate, Parity parity, int dataBits, StopBits stopBits, Handshake handshake)

@@ -626,7 +626,7 @@ namespace Mono.IO.Ports
                 _stream = new WinSerialStream(_portName, _baudRate, _dataBits, _parity, _stopBits, _dtrEnable,
                     _rtsEnable, _handshake, _readTimeout, _writeTimeout, _readBufferSize, _writeBufferSize);
             else if (isUnix) // Use unix termios backend
-                _stream = new SerialPortStream(_portName, _baudRate, _dataBits, _parity, _stopBits, _dtrEnable,
+                _stream = new UnixSerialStream(_portName, _baudRate, _dataBits, _parity, _stopBits, _dtrEnable,
                     _rtsEnable, _handshake, _readTimeout, _writeTimeout, _readBufferSize, _writeBufferSize);
             else
                 throw new PlatformNotSupportedException("SerialPort is not supported on this platform");
