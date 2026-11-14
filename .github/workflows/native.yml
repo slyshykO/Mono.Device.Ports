@@ -17,14 +17,14 @@ jobs:
             rid: linux-musl-x64
     steps:
       - uses: actions/checkout@v7
-      - name: Native tests and NuGet consumer smoke test
+      - name: Native tests and JIT/Native AOT NuGet consumer smoke tests
         run: |
           docker run --rm -v "$PWD:/src" -w /src -e MDP_RUNTIME_ID=${{ matrix.rid }} ${{ matrix.image }} sh -euxc '
             if command -v apk >/dev/null; then
-              apk add --no-cache build-base cmake ninja linux-headers
+              apk add --no-cache build-base clang zlib-dev cmake ninja linux-headers
             else
               apt-get update
-              apt-get install -y --no-install-recommends build-essential cmake ninja-build
+              apt-get install -y --no-install-recommends build-essential clang zlib1g-dev cmake ninja-build
             fi
             cmake -S . -B artifacts/build/native -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DMDP_RUNTIME_ID=$MDP_RUNTIME_ID -DCMAKE_INSTALL_PREFIX=$PWD/artifacts/native
             cmake --build artifacts/build/native
@@ -33,6 +33,8 @@ jobs:
             dotnet pack Mono.Device.Ports/Mono.IO.Ports.csproj -c Release -p:NativeRuntimeIdentifiers=$MDP_RUNTIME_ID -o artifacts/packages
             dotnet build tests/SerialSmoke -c Release --artifacts-path artifacts/managed -p:UsePackedLibrary=true -p:RestoreSources=$PWD/artifacts/packages -p:RestorePackagesPath=$PWD/artifacts/package-cache
             dotnet artifacts/managed/bin/SerialSmoke/release/SerialSmoke.dll
+            dotnet publish tests/NativeAotSmoke -c Release -r $MDP_RUNTIME_ID --artifacts-path artifacts/managed-aot -p:UsePackedLibrary=true -p:RestoreAdditionalProjectSources=$PWD/artifacts/packages -p:RestorePackagesPath=$PWD/artifacts/aot-package-cache -o artifacts/aot/$MDP_RUNTIME_ID
+            timeout 30s artifacts/aot/$MDP_RUNTIME_ID/NativeAotSmoke
           '
 
   zig-cross:

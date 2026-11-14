@@ -124,3 +124,40 @@ cleanup. Hardware flow control, electrical signals, and actual UART timing still
 need device tests. macOS can build the native sources locally, but the supplied
 presets and CI package assets currently cover Linux only. The existing managed
 text decoding and event API limitations are unchanged.
+
+## Native AOT compatibility
+
+`tests/NativeAotSmoke` is a .NET 10 executable that publishes with Native AOT.
+It roots the entire `Mono.IO.Ports` assembly so the compiler analyzes all of the
+library, including APIs outside the smoke test. Trimming and AOT warnings fail
+the publish. It reuses the Linux pseudo-terminal tests from `SerialSmoke`.
+A normal `dotnet build` or `dotnet test` does not perform the AOT publish check.
+
+Install the platform's [Native AOT prerequisites](https://learn.microsoft.com/dotnet/core/deploying/native-aot/#prerequisites).
+After building and packing the native assets as above, publish and run on Linux:
+
+```sh
+dotnet publish tests/NativeAotSmoke -c Release -r linux-x64 \
+  --artifacts-path artifacts/managed-aot \
+  -p:UsePackedLibrary=true \
+  -p:RestoreAdditionalProjectSources="$PWD/artifacts/packages" \
+  -p:RestorePackagesPath="$PWD/artifacts/aot-package-cache" \
+  -o artifacts/aot/linux-x64
+./artifacts/aot/linux-x64/NativeAotSmoke
+```
+
+On Alpine, replace `linux-x64` with `linux-musl-x64`. The NuGet package supplies
+the native helper in the publish directory. The additional restore source keeps
+NuGet.org available for the AOT compiler and runtime packs.
+
+To check Windows compilation against the library project, run on Windows with
+the Visual Studio C++ build tools installed:
+
+```powershell
+dotnet publish tests/NativeAotSmoke -c Release -r win-x64 `
+  --artifacts-path artifacts/managed-aot-windows -o artifacts/aot/win-x64
+```
+
+Windows CI checks compilation only; the linked smoke test requires Linux
+pseudo-terminals. Linux CI publishes and runs the packaged consumer on both
+glibc and musl. Physical serial hardware is not required.

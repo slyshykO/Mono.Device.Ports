@@ -1,0 +1,30 @@
+<!-- Copyright (c) 2026 Oleksiy Slyshyk -->
+<!-- SPDX-License-Identifier: MIT -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPackable>false</IsPackable>
+    <PublishAot>true</PublishAot>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+    <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <SerialPackageVersion Condition="'$(SerialPackageVersion)' == ''">0.0.1</SerialPackageVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsePackedLibrary)' != 'true'">
+    <ProjectReference Include="../../Mono.Device.Ports/Mono.IO.Ports.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UsePackedLibrary)' == 'true'">
+    <PackageReference Include="Mono.IO.Ports" Version="$(SerialPackageVersion)" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Analyze the entire library, including APIs the smoke test does not call. -->
+    <TrimmerRootAssembly Include="Mono.IO.Ports" />
+    <!-- Run the same Linux pseudo-terminal tests under JIT and Native AOT. -->
+    <Compile Include="../SerialSmoke/Program.cs" Link="Program.cs" />
+  </ItemGroup>
+</Project>
