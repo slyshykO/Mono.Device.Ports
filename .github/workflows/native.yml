@@ -16,7 +16,7 @@ jobs:
           - image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
             rid: linux-musl-x64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Native tests and NuGet consumer smoke test
         run: |
           docker run --rm -v "$PWD:/src" -w /src -e MDP_RUNTIME_ID=${{ matrix.rid }} ${{ matrix.image }} sh -euxc '
@@ -38,8 +38,8 @@ jobs:
   zig-cross:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - name: Install Zig 0.17.1
