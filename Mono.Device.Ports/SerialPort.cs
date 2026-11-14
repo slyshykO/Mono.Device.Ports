@@ -613,6 +613,9 @@ namespace Mono.IO.Ports
             }
         }
 
+#if NET6_0_OR_GREATER
+        [System.Runtime.Versioning.SupportedOSPlatformGuard("windows")]
+#endif
         private static bool IsWindows
         {
             get
@@ -838,7 +841,7 @@ namespace Mono.IO.Ports
         internal void OnErrorReceived(SerialErrorReceivedEventArgs args)
         {
             var handler =
-                (SerialErrorReceivedEventHandler)Events[_errorReceived];
+                (SerialErrorReceivedEventHandler?)Events[_errorReceived];
 
             handler?.Invoke(this, args);
         }
@@ -846,7 +849,7 @@ namespace Mono.IO.Ports
         internal void OnDataReceived(SerialDataReceivedEventArgs args)
         {
             var handler =
-                (SerialDataReceivedEventHandler)Events[_dataReceived];
+                (SerialDataReceivedEventHandler?)Events[_dataReceived];
 
             handler?.Invoke(this, args);
         }
@@ -854,7 +857,7 @@ namespace Mono.IO.Ports
         internal void OnDataReceived(SerialPinChangedEventArgs args)
         {
             var handler =
-                (SerialPinChangedEventHandler)Events[_pinChanged];
+                (SerialPinChangedEventHandler?)Events[_pinChanged];
 
             handler?.Invoke(this, args);
         }

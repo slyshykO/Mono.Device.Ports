@@ -1,6 +1,6 @@
 # Mono.Device.Ports
 
-A serial-port library targeting .NET Standard 2.1. Windows uses the existing
+A serial-port library targeting .NET Standard 2.1 and .NET 10. Windows uses the existing
 Win32 backend. Unix operations use a small C helper, `MonoDevicePortsNative`,
 built with CMake. The public API remains in the `Mono.IO.Ports` namespace.
 
@@ -88,8 +88,10 @@ cmake --install artifacts/build/linux-x64
 ## Package
 
 Build and install each preset before packing. A normal `dotnet build` does not
-build native code or create a package. `dotnet pack` checks that the six default
-Linux assets exist, then includes the staged `runtimes/` tree. Package consumers
+build native code or create a package. `dotnet pack` includes both managed builds
+in one package, under `lib/netstandard2.1/` and `lib/net10.0/`. NuGet selects the
+appropriate build for the consuming application. Packing checks that the six default
+Linux assets exist, then includes the shared `runtimes/` tree. Package consumers
 do not need CMake or Zig; .NET selects the native asset for their runtime.
 
 ```powershell

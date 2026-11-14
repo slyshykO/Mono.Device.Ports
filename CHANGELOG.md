@@ -1,5 +1,7 @@
 ## [unreleased]
 
+* target both .NET Standard 2.1 and .NET 10 in one NuGet package, sharing the native runtime assets
+
 ## 0.1.0 [2026-11-14]
 
 * add a CMake-built Unix serial helper with SafeHandle ownership
