@@ -99,7 +99,10 @@ namespace Mono.IO.Ports
 
         public SerialPort(IContainer container) : this()
         {
-            // TODO: What to do here?
+            if (container == null)
+                throw new ArgumentNullException(nameof(container));
+
+            container.Add(this);
         }
 
         public SerialPort(string portName) :
