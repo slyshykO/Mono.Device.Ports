@@ -118,7 +118,7 @@ dotnet build tests/SerialSmoke -c Release --artifacts-path artifacts/package-tes
 dotnet artifacts/package-test/bin/SerialSmoke/release/SerialSmoke.dll
 ```
 
-The smoke tests use pseudo-terminals and require no serial hardware. They cover
+The Linux smoke tests use pseudo-terminals and require no serial hardware. They cover
 binary transfers, baud rates, timeouts, disconnects, disposal, and failed-open
 cleanup. Hardware flow control, electrical signals, and actual UART timing still
 need device tests. macOS can build the native sources locally, but the supplied
@@ -130,7 +130,9 @@ text decoding and event API limitations are unchanged.
 `tests/NativeAotSmoke` is a .NET 10 executable that publishes with Native AOT.
 It roots the entire `Mono.IO.Ports` assembly so the compiler analyzes all of the
 library, including APIs outside the smoke test. Trimming and AOT warnings fail
-the publish. It reuses the Linux pseudo-terminal tests from `SerialSmoke`.
+the publish. It reuses the platform-specific tests from `SerialSmoke`: Linux
+uses pseudo-terminals; Windows checks port enumeration, configuration, failed
+opens of a nonexistent device, closed-port guards, and disposal.
 A normal `dotnet build` or `dotnet test` does not perform the AOT publish check.
 
 Install the platform's [Native AOT prerequisites](https://learn.microsoft.com/dotnet/core/deploying/native-aot/#prerequisites).
@@ -150,14 +152,16 @@ On Alpine, replace `linux-x64` with `linux-musl-x64`. The NuGet package supplies
 the native helper in the publish directory. The additional restore source keeps
 NuGet.org available for the AOT compiler and runtime packs.
 
-To check Windows compilation against the library project, run on Windows with
+To publish and run against the library project on Windows, use a machine with
 the Visual Studio C++ build tools installed:
 
 ```powershell
 dotnet publish tests/NativeAotSmoke -c Release -r win-x64 `
   --artifacts-path artifacts/managed-aot-windows -o artifacts/aot/win-x64
+.\artifacts\aot\win-x64\NativeAotSmoke.exe
 ```
 
-Windows CI checks compilation only; the linked smoke test requires Linux
-pseudo-terminals. Linux CI publishes and runs the packaged consumer on both
-glibc and musl. Physical serial hardware is not required.
+CI publishes and runs the smoke test on Windows and the packaged consumer on
+Linux with both glibc and musl. Physical serial hardware is not required. The
+Windows test never opens a real port; successful Windows serial I/O still
+requires separate hardware or virtual-port testing.

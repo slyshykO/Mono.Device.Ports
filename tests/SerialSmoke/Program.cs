@@ -5,8 +5,14 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Mono.IO.Ports;
 
+if (OperatingSystem.IsWindows())
+{
+    WindowsSerialSmoke.Run();
+    return;
+}
+
 if (!OperatingSystem.IsLinux())
-    throw new PlatformNotSupportedException("This smoke test uses Linux pseudo-terminals.");
+    throw new PlatformNotSupportedException("The serial smoke tests support Windows and Linux.");
 
 static void Check(bool condition, string message)
 {

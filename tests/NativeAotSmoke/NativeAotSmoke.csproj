@@ -24,7 +24,8 @@
   <ItemGroup>
     <!-- Analyze the entire library, including APIs the smoke test does not call. -->
     <TrimmerRootAssembly Include="Mono.IO.Ports" />
-    <!-- Run the same Linux pseudo-terminal tests under JIT and Native AOT. -->
+    <!-- Run the same platform-specific smoke tests under JIT and Native AOT. -->
     <Compile Include="../SerialSmoke/Program.cs" Link="Program.cs" />
+    <Compile Include="../SerialSmoke/WindowsSerialSmoke.cs" Link="WindowsSerialSmoke.cs" />
   </ItemGroup>
 </Project>

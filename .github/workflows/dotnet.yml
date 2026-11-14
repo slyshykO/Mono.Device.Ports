@@ -45,3 +45,5 @@ jobs:
         run: dotnet test -c Release --no-build --verbosity normal
       - name: Check Native AOT compilation
         run: dotnet publish tests/NativeAotSmoke -c Release -r win-x64 -o artifacts/aot/win-x64
+      - name: Run Native AOT smoke test
+        run: .\artifacts\aot\win-x64\NativeAotSmoke.exe
