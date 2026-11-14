@@ -131,7 +131,7 @@ namespace Mono.IO.Ports
             _baudRate = baudRate;
             _dataBits = dataBits;
             _stopBits = stopBits;
-            this._parity = parity;
+            _parity = parity;
         }
 
         private static string GetDefaultPortName()
@@ -153,7 +153,7 @@ namespace Mono.IO.Ports
         }
 
         [Browsable(false)]
-        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Stream? BaseStream
         {
             get
@@ -163,7 +163,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(DefaultBaudRate)]
+        [DefaultValue(DefaultBaudRate)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public int BaudRate
@@ -182,7 +182,7 @@ namespace Mono.IO.Ports
         }
 
         [Browsable(false)]
-        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool BreakState
         {
             get => _breakState;
@@ -198,7 +198,7 @@ namespace Mono.IO.Ports
         }
 
         [Browsable(false)]
-        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int BytesToRead
         {
             get
@@ -209,7 +209,7 @@ namespace Mono.IO.Ports
         }
 
         [Browsable(false)]
-        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int BytesToWrite
         {
             get
@@ -220,7 +220,7 @@ namespace Mono.IO.Ports
         }
 
         [Browsable(false)]
-        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CDHolding
         {
             get
@@ -231,7 +231,7 @@ namespace Mono.IO.Ports
         }
 
         [Browsable(false)]
-        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CtsHolding
         {
             get
@@ -241,7 +241,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(DefaultDataBits)]
+        [DefaultValue(DefaultDataBits)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public int DataBits
@@ -273,7 +273,7 @@ namespace Mono.IO.Ports
         }
 
         [Browsable(false)]
-        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DsrHolding
         {
             get
@@ -283,7 +283,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(false)]
+        [DefaultValue(false)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public bool DtrEnable
@@ -301,7 +301,7 @@ namespace Mono.IO.Ports
         }
 
         [Browsable(false)]
-        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [MonitoringDescription("")]
         public Encoding Encoding
         {
@@ -309,7 +309,7 @@ namespace Mono.IO.Ports
             set => _encoding = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        [DefaultValueAttribute(Handshake.None)]
+        [DefaultValue(Handshake.None)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public Handshake Handshake
@@ -330,7 +330,7 @@ namespace Mono.IO.Ports
         [Browsable(false)]
         public bool IsOpen { get; private set; }
 
-        [DefaultValueAttribute("\n")]
+        [DefaultValue("\n")]
         [Browsable(false)]
         [MonitoringDescription("")]
         public string NewLine
@@ -347,7 +347,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(DefaultParity)]
+        [DefaultValue(DefaultParity)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public Parity Parity
@@ -395,7 +395,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(DefaultReadBufferSize)]
+        [DefaultValue(DefaultReadBufferSize)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public int ReadBufferSize
@@ -414,7 +414,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(InfiniteTimeout)]
+        [DefaultValue(InfiniteTimeout)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public int ReadTimeout
@@ -433,7 +433,7 @@ namespace Mono.IO.Ports
         }
 
         //[MonoTODO("Not implemented")]
-        [DefaultValueAttribute(1)]
+        [DefaultValue(1)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public int ReceivedBytesThreshold
@@ -448,7 +448,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(false)]
+        [DefaultValue(false)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public bool RtsEnable
@@ -465,7 +465,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(DefaultStopBits)]
+        [DefaultValue(DefaultStopBits)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public StopBits StopBits
@@ -483,7 +483,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(DefaultWriteBufferSize)]
+        [DefaultValue(DefaultWriteBufferSize)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public int WriteBufferSize
@@ -502,7 +502,7 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DefaultValueAttribute(InfiniteTimeout)]
+        [DefaultValue(InfiniteTimeout)]
         [Browsable(true)]
         [MonitoringDescription("")]
         public int WriteTimeout
