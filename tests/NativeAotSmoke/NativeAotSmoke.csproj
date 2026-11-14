@@ -13,7 +13,7 @@
     <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
     <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
     <TrimmerSingleWarn>false</TrimmerSingleWarn>
-    <SerialPackageVersion Condition="'$(SerialPackageVersion)' == ''">0.0.1</SerialPackageVersion>
+    <SerialPackageVersion Condition="'$(SerialPackageVersion)' == ''">0.1.0</SerialPackageVersion>
   </PropertyGroup>
   <ItemGroup Condition="'$(UsePackedLibrary)' != 'true'">
     <ProjectReference Include="../../Mono.Device.Ports/Mono.IO.Ports.csproj" />
