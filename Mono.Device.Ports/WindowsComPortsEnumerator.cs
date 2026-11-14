@@ -4,8 +4,17 @@ using System.Runtime.InteropServices;
 
 namespace Mono.IO.Ports
 {
-    class WindowsComPortsEnumerator
+    partial class WindowsComPortsEnumerator
     {
+#if NET7_0_OR_GREATER
+        [LibraryImport("advapi32.dll", EntryPoint = "RegOpenKeyExW", StringMarshalling = StringMarshalling.Utf16)]
+        private static partial int RegOpenKeyEx(
+            IntPtr hKey,
+            string lpSubKey,
+            int ulOptions,
+            int samDesired,
+            out IntPtr hkResult);
+#else
         [DllImport("advapi32.dll", EntryPoint = "RegOpenKeyExW", CharSet = CharSet.Unicode, BestFitMapping = false)]
         private static extern int RegOpenKeyEx(
             IntPtr hKey,
@@ -13,29 +22,59 @@ namespace Mono.IO.Ports
             int ulOptions,
             int samDesired,
             out IntPtr hkResult);
+#endif
 
+#if NET7_0_OR_GREATER
+        [LibraryImport("advapi32.dll")]
+        private static partial int RegCloseKey(IntPtr hKey);
+#else
         [DllImport("advapi32.dll")]
         private static extern int RegCloseKey(IntPtr hKey);
+#endif
 
+#if NET7_0_OR_GREATER
+        [LibraryImport("advapi32.dll", EntryPoint = "RegEnumValueW", StringMarshalling = StringMarshalling.Utf16)]
+        private static partial int RegEnumValue(
+            IntPtr hKey,
+            int dwIndex,
+            [Out] char[] lpValueName,
+            ref int lpcbValueName,
+            IntPtr lpReservedMustBeZero,
+            IntPtr lpType,
+            IntPtr lpData,
+            IntPtr lpcbData);
+#else
         [DllImport("advapi32.dll", EntryPoint = "RegEnumValueW", CharSet = CharSet.Unicode, BestFitMapping = false)]
         private static extern int RegEnumValue(
             IntPtr hKey,
             int dwIndex,
-            char[] lpValueName,
+            [Out] char[] lpValueName,
             ref int lpcbValueName,
             IntPtr lpReservedMustBeZero,
-            int[]? lpType,
-            byte[]? lpData,
-            int[]? lpcbData);
+            IntPtr lpType,
+            IntPtr lpData,
+            IntPtr lpcbData);
+#endif
 
+#if NET7_0_OR_GREATER
+        [LibraryImport("advapi32.dll", EntryPoint = "RegQueryValueExW", StringMarshalling = StringMarshalling.Utf16)]
+        private static partial int RegQueryValueEx(
+            IntPtr hKey,
+            string lpValueName,
+            IntPtr lpReserved,
+            ref int lpType,
+            [Out] char[] lpData,
+            ref int lpcbData);
+#else
         [DllImport("advapi32.dll", EntryPoint = "RegQueryValueExW", CharSet = CharSet.Unicode, BestFitMapping = false)]
         private static extern int RegQueryValueEx(
             IntPtr hKey,
             string lpValueName,
-            int[]? lpReserved,
+            IntPtr lpReserved,
             ref int lpType,
             [Out] char[] lpData,
             ref int lpcbData);
+#endif
 
         public static List<string> GetPorts()
         {
@@ -69,9 +108,9 @@ namespace Mono.IO.Ports
                             , chArray
                             , ref len
                             , IntPtr.Zero
-                            , null
-                            , null
-                            , null);
+                            , IntPtr.Zero
+                            , IntPtr.Zero
+                            , IntPtr.Zero);
                         if (errorCode != 0)
                             break;
 
@@ -79,7 +118,7 @@ namespace Mono.IO.Ports
 
                         var lpType = 0;
                         var dataLen = chArray.Length * sizeof(char);
-                        errorCode = RegQueryValueEx(serialCommHkey, keyName, null, ref lpType, chArray, ref dataLen);
+                        errorCode = RegQueryValueEx(serialCommHkey, keyName, IntPtr.Zero, ref lpType, chArray, ref dataLen);
 
                         if (errorCode != 0 || lpType != REG_SZ) continue;
                         dataLen = dataLen / sizeof(char) - 1; // in bytes without zero terminator

@@ -1,8 +1,10 @@
 # Mono.Device.Ports
 
 A serial-port library targeting .NET Standard 2.1 and .NET 10. Windows uses the existing
-Win32 backend. Unix operations use a small C helper, `MonoDevicePortsNative`,
-built with CMake. The public API remains in the `Mono.IO.Ports` namespace.
+Win32 backend, with source-generated `LibraryImport` declarations on .NET 10 and
+`DllImport` declarations on .NET Standard 2.1. Unix operations use a small C helper,
+`MonoDevicePortsNative`, built with CMake. The public API remains in the
+`Mono.IO.Ports` namespace.
 
 The helper owns platform headers, `termios`/`ioctl` details, baud-rate mapping,
 signals, and synchronous I/O. Managed code owns the descriptor through a

@@ -18,7 +18,7 @@ namespace Mono.IO.Ports
 #if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 #endif
-    class WinSerialStream : Stream, ISerialStream, IDisposable
+    partial class WinSerialStream : Stream, ISerialStream, IDisposable
     {
         // Windows API Constants
         const uint GenericRead = 0x80000000;
@@ -50,7 +50,7 @@ namespace Mono.IO.Ports
         const uint EvErr = 0x0080;
         const uint EvRing = 0x0100;
 
-        int handle;
+        IntPtr handle;
         int read_timeout;
         int write_timeout;
         bool disposed;
@@ -60,19 +60,120 @@ namespace Mono.IO.Ports
         ManualResetEvent write_event;
         Timeouts timeouts;
 
-        [DllImport("kernel32", SetLastError = true)]
-        static extern int CreateFile(string? port_name, uint desired_access,
-                uint share_mode, uint security_attrs, uint creation, uint flags,
-                uint template);
+        // Native Windows API declarations
+#if NET7_0_OR_GREATER
+        [LibraryImport("kernel32.dll", EntryPoint = "CreateFileW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        private static partial IntPtr CreateFile(string? port_name, uint desired_access,
+                uint share_mode, IntPtr security_attrs, uint creation, uint flags,
+                IntPtr template);
 
-        [DllImport("kernel32", SetLastError = true)]
-        static extern bool SetupComm(int handle, int read_buffer_size, int write_buffer_size);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SetupComm(IntPtr handle, int read_buffer_size, int write_buffer_size);
 
-        [DllImport("kernel32", SetLastError = true)]
-        static extern bool PurgeComm(int handle, uint flags);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool PurgeComm(IntPtr handle, uint flags);
 
-        [DllImport("kernel32", SetLastError = true)]
-        static extern bool SetCommTimeouts(int handle, Timeouts timeouts);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SetCommTimeouts(IntPtr handle, ref Timeouts timeouts);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool CloseHandle(IntPtr handle);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static unsafe partial bool ReadFile(IntPtr handle, byte* buffer, int bytes_to_read,
+                    out int bytes_read, IntPtr overlapped);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool GetOverlappedResult(IntPtr handle, IntPtr overlapped,
+                    ref int bytes_transferred, [MarshalAs(UnmanagedType.Bool)] bool wait);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static unsafe partial bool WriteFile(IntPtr handle, byte* buffer, int bytes_to_write,
+                out int bytes_written, IntPtr overlapped);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool GetCommState(IntPtr handle, ref DCB dcb);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SetCommState(IntPtr handle, ref DCB dcb);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool ClearCommError(IntPtr handle, out uint errors, out CommStat stat);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool GetCommModemStatus(IntPtr handle, out uint flags);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool EscapeCommFunction(IntPtr handle, uint flags);
+#else
+        [DllImport("kernel32.dll", EntryPoint = "CreateFileW", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
+        private static extern IntPtr CreateFile(string? port_name, uint desired_access,
+                uint share_mode, IntPtr security_attrs, uint creation, uint flags,
+                IntPtr template);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetupComm(IntPtr handle, int read_buffer_size, int write_buffer_size);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool PurgeComm(IntPtr handle, uint flags);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetCommTimeouts(IntPtr handle, ref Timeouts timeouts);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CloseHandle(IntPtr handle);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern unsafe bool ReadFile(IntPtr handle, byte* buffer, int bytes_to_read,
+                    out int bytes_read, IntPtr overlapped);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetOverlappedResult(IntPtr handle, IntPtr overlapped,
+                    ref int bytes_transferred, [MarshalAs(UnmanagedType.Bool)] bool wait);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern unsafe bool WriteFile(IntPtr handle, byte* buffer, int bytes_to_write,
+                out int bytes_written, IntPtr overlapped);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetCommState(IntPtr handle, ref DCB dcb);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetCommState(IntPtr handle, ref DCB dcb);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool ClearCommError(IntPtr handle, out uint errors, out CommStat stat);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetCommModemStatus(IntPtr handle, out uint flags);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool EscapeCommFunction(IntPtr handle, uint flags);
+#endif
 
         public WinSerialStream(string port_name, int baud_rate, int data_bits, Parity parity, StopBits sb,
                 bool dtr_enable, bool rts_enable, Handshake hs, int read_timeout, int write_timeout,
@@ -80,10 +181,10 @@ namespace Mono.IO.Ports
         {
             handle = CreateFile(port_name != null && !port_name.StartsWith(@"\\.\")
                     ? @"\\.\" + port_name : port_name,
-                    GenericRead | GenericWrite, 0, 0, OpenExisting,
-                    FileFlagOverlapped, 0);
+                    GenericRead | GenericWrite, 0, IntPtr.Zero, OpenExisting,
+                    FileFlagOverlapped, IntPtr.Zero);
 
-            if (handle == -1)
+            if (handle == new IntPtr(-1))
                 ReportIOError(port_name);
 
             // Set port low level attributes
@@ -98,7 +199,7 @@ namespace Mono.IO.Ports
             this.read_timeout = read_timeout;
             this.write_timeout = write_timeout;
             timeouts = new Timeouts(read_timeout, write_timeout);
-            if (!SetCommTimeouts(handle, timeouts))
+            if (!SetCommTimeouts(handle, ref timeouts))
                 ReportIOError(null);
 
             /// Set DTR and RTS
@@ -168,7 +269,7 @@ namespace Mono.IO.Ports
                     throw new ArgumentOutOfRangeException("value");
 
                 timeouts.SetValues(value, write_timeout);
-                if (!SetCommTimeouts(handle, timeouts))
+                if (!SetCommTimeouts(handle, ref timeouts))
                     ReportIOError(null);
 
                 read_timeout = value;
@@ -187,7 +288,7 @@ namespace Mono.IO.Ports
                     throw new ArgumentOutOfRangeException("value");
 
                 timeouts.SetValues(read_timeout, value);
-                if (!SetCommTimeouts(handle, timeouts))
+                if (!SetCommTimeouts(handle, ref timeouts))
                     ReportIOError(null);
 
                 write_timeout = value;
@@ -213,9 +314,6 @@ namespace Mono.IO.Ports
                 throw new NotSupportedException();
             }
         }
-
-        [DllImport("kernel32", SetLastError = true)]
-        static extern bool CloseHandle(int handle);
 
         protected override void Dispose(bool disposing)
         {
@@ -260,14 +358,6 @@ namespace Mono.IO.Ports
             throw new NotSupportedException();
         }
 
-        [DllImport("kernel32", SetLastError = true)]
-        static extern unsafe bool ReadFile(int handle, byte* buffer, int bytes_to_read,
-                    out int bytes_read, IntPtr overlapped);
-
-        [DllImport("kernel32", SetLastError = true)]
-        static extern unsafe bool GetOverlappedResult(int handle, IntPtr overlapped,
-                    ref int bytes_transferred, bool wait);
-
         public override int Read(Span<byte> buffer)
         {
             CheckDisposed();
@@ -308,10 +398,6 @@ namespace Mono.IO.Ports
             return this.Read(buffer.AsSpan(offset, count));
         }
 
-        [DllImport("kernel32", SetLastError = true)]
-        static extern unsafe bool WriteFile(int handle, byte* buffer, int bytes_to_write,
-                out int bytes_written, IntPtr overlapped);
-
         public override void Write(byte[] buffer, int offset, int count)
         {
             this.Write(new ReadOnlySpan<byte>(buffer, offset, count));
@@ -351,22 +437,16 @@ namespace Mono.IO.Ports
         }
 
 
-        [DllImport("kernel32", SetLastError = true)]
-        static extern bool GetCommState(int handle, [Out] DCB dcb);
-
-        [DllImport("kernel32", SetLastError = true)]
-        static extern bool SetCommState(int handle, DCB dcb);
-
         public void SetAttributes(int baudRate, Parity parity, int dataBits, StopBits bits, Handshake hs)
         {
-            DCB dcb = new DCB();
+            DCB dcb = new DCB { dcb_length = Marshal.SizeOf<DCB>() };
 
-            if (!GetCommState(handle, dcb))
+            if (!GetCommState(handle, ref dcb))
                 ReportIOError(null);
 
             dcb.SetValues(baudRate, parity, dataBits, bits, hs);
 
-            if (!SetCommState(handle, dcb))
+            if (!SetCommState(handle, ref dcb))
                 ReportIOError(null);
         }
 
@@ -411,9 +491,6 @@ namespace Mono.IO.Ports
                 ReportIOError(null);
         }
 
-        [DllImport("kernel32", SetLastError = true)]
-        static extern bool ClearCommError(int handle, out uint errors, out CommStat stat);
-
         public int BytesToRead
         {
             get
@@ -440,9 +517,6 @@ namespace Mono.IO.Ports
             }
         }
 
-        [DllImport("kernel32", SetLastError = true)]
-        static extern bool GetCommModemStatus(int handle, out uint flags);
-
         public SerialSignal GetSignals()
         {
             uint flags;
@@ -459,9 +533,6 @@ namespace Mono.IO.Ports
 
             return signals;
         }
-
-        [DllImport("kernel32", SetLastError = true)]
-        static extern bool EscapeCommFunction(int handle, uint flags);
 
         public void SetSignal(SerialSignal signal, bool value)
         {
@@ -493,7 +564,7 @@ namespace Mono.IO.Ports
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    class DCB
+    struct DCB
     {
         public int dcb_length;
         public int baud_rate;
@@ -573,7 +644,7 @@ namespace Mono.IO.Ports
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    class Timeouts
+    struct Timeouts
     {
         public uint ReadIntervalTimeout;
         public uint ReadTotalTimeoutMultiplier;
@@ -583,7 +654,7 @@ namespace Mono.IO.Ports
 
         public const uint MaxDWord = 0xFFFFFFFF;
 
-        public Timeouts(int read_timeout, int write_timeout)
+        public Timeouts(int read_timeout, int write_timeout) : this()
         {
             SetValues(read_timeout, write_timeout);
         }
