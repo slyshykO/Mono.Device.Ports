@@ -5,3 +5,5 @@ obj/
 .idea/
 
 *.user
+artifacts/
+CMakeUserPresets.json

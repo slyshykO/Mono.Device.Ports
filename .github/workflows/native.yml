@@ -1,0 +1,74 @@
+name: Native serial helper
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  native-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: mcr.microsoft.com/dotnet/sdk:10.0
+            rid: linux-x64
+          - image: mcr.microsoft.com/dotnet/sdk:10.0-alpine
+            rid: linux-musl-x64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Native tests and NuGet consumer smoke test
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src -e MDP_RUNTIME_ID=${{ matrix.rid }} ${{ matrix.image }} sh -euxc '
+            if command -v apk >/dev/null; then
+              apk add --no-cache build-base cmake ninja linux-headers
+            else
+              apt-get update
+              apt-get install -y --no-install-recommends build-essential cmake ninja-build
+            fi
+            cmake -S . -B artifacts/build/native -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DMDP_RUNTIME_ID=$MDP_RUNTIME_ID -DCMAKE_INSTALL_PREFIX=$PWD/artifacts/native
+            cmake --build artifacts/build/native
+            ctest --test-dir artifacts/build/native --output-on-failure
+            cmake --install artifacts/build/native
+            dotnet pack Mono.Device.Ports/Mono.IO.Ports.csproj -c Release -p:NativeRuntimeIdentifiers=$MDP_RUNTIME_ID -o artifacts/packages
+            dotnet build tests/SerialSmoke -c Release --artifacts-path artifacts/managed -p:UsePackedLibrary=true -p:RestoreSources=$PWD/artifacts/packages -p:RestorePackagesPath=$PWD/artifacts/package-cache
+            dotnet artifacts/managed/bin/SerialSmoke/release/SerialSmoke.dll
+          '
+
+  zig-cross:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Install Zig 0.17.1
+        run: |
+          curl --fail --location https://ziglang.org/download/0.17.1/zig-x86_64-linux-0.17.1.tar.xz -o "$RUNNER_TEMP/zig.tar.xz"
+          echo "3581863e3cbcfd0fce0efc682ce7e9e93da96668a977791d356a26d2a7e9b17a  $RUNNER_TEMP/zig.tar.xz" | sha256sum --check
+          tar -xf "$RUNNER_TEMP/zig.tar.xz" -C "$RUNNER_TEMP"
+          echo "ZIG_BIN=$RUNNER_TEMP/zig-x86_64-linux-0.17.1/zig" >> "$GITHUB_ENV"
+      - name: Cross-compile all Linux assets
+        run: |
+          cmake -P cmake/tests/ZigVersionTests.cmake
+          for rid in linux-x64 linux-arm64 linux-arm linux-musl-x64 linux-musl-arm64 linux-musl-arm; do
+            cmake --preset "$rid"
+            cmake --build "artifacts/build/$rid"
+            cmake --install "artifacts/build/$rid"
+          done
+      - name: Pack and load the Zig-built helper from NuGet
+        run: |
+          dotnet pack Mono.Device.Ports/Mono.IO.Ports.csproj -c Release -o artifacts/packages
+          dotnet build tests/SerialSmoke -c Release --artifacts-path artifacts/managed -p:UsePackedLibrary=true -p:RestoreSources=$PWD/artifacts/packages -p:RestorePackagesPath=$PWD/artifacts/package-cache
+          dotnet artifacts/managed/bin/SerialSmoke/release/SerialSmoke.dll
+      # The cross-built musl asset must also be selected by a real musl runtime.
+      - name: Load the Zig-built musl helper from NuGet on Alpine
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0-alpine sh -euxc '
+            dotnet build tests/SerialSmoke -c Release --artifacts-path artifacts/managed-musl -p:UsePackedLibrary=true -p:RestoreSources=$PWD/artifacts/packages -p:RestorePackagesPath=$PWD/artifacts/package-cache-musl
+            dotnet artifacts/managed-musl/bin/SerialSmoke/release/SerialSmoke.dll
+          '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: serial-packages
+          path: artifacts/packages/*

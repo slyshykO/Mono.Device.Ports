@@ -5,6 +5,10 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mono.IO.Ports", "Mono.Device.Ports\Mono.IO.Ports.csproj", "{C2CFE3A6-23EA-499F-A487-D71F33F2D784}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerialSmoke", "tests\SerialSmoke\SerialSmoke.csproj", "{160EF3B7-A50E-4032-B934-89F611B4B9EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +19,16 @@ Global
 		{C2CFE3A6-23EA-499F-A487-D71F33F2D784}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2CFE3A6-23EA-499F-A487-D71F33F2D784}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2CFE3A6-23EA-499F-A487-D71F33F2D784}.Release|Any CPU.Build.0 = Release|Any CPU
+		{160EF3B7-A50E-4032-B934-89F611B4B9EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{160EF3B7-A50E-4032-B934-89F611B4B9EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{160EF3B7-A50E-4032-B934-89F611B4B9EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{160EF3B7-A50E-4032-B934-89F611B4B9EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{160EF3B7-A50E-4032-B934-89F611B4B9EE} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BC3EDD22-5274-42D0-8ED6-C18851AC2487}

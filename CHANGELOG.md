@@ -1,5 +1,10 @@
 ## [unreleased]
 
+* add a CMake-built Unix serial helper with SafeHandle ownership
+* add Zig discovery and Linux glibc/musl cross-compilation presets
+* package native assets by runtime identifier and add pseudo-terminal integration tests
+* support Linux custom baud rates and operation-wide native I/O timeout deadlines
+
 * fix typos in comments and variable names in WinSerialStream.cs
 * add .idea directory to .gitignore
 * add tags
