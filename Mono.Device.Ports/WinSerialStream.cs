@@ -50,15 +50,15 @@ namespace Mono.IO.Ports
         const uint EvErr = 0x0080;
         const uint EvRing = 0x0100;
 
-        IntPtr handle;
-        int read_timeout;
-        int write_timeout;
-        bool disposed;
-        IntPtr write_overlapped;
-        IntPtr read_overlapped;
-        ManualResetEvent read_event;
-        ManualResetEvent write_event;
-        Timeouts timeouts;
+        private IntPtr _handle;
+        private int _readTimeout;
+        private int _writeTimeout;
+        private bool _disposed;
+        private IntPtr _writeOverlapped;
+        private IntPtr _readOverlapped;
+        private ManualResetEvent _readEvent;
+        private ManualResetEvent _writeEvent;
+        private Timeouts _timeouts;
 
         // Native Windows API declarations
 #if NET7_0_OR_GREATER
@@ -179,27 +179,27 @@ namespace Mono.IO.Ports
                 bool dtr_enable, bool rts_enable, Handshake hs, int read_timeout, int write_timeout,
                 int read_buffer_size, int write_buffer_size)
         {
-            handle = CreateFile(port_name != null && !port_name.StartsWith(@"\\.\")
+            _handle = CreateFile(port_name != null && !port_name.StartsWith(@"\\.\")
                     ? @"\\.\" + port_name : port_name,
                     GenericRead | GenericWrite, 0, IntPtr.Zero, OpenExisting,
                     FileFlagOverlapped, IntPtr.Zero);
 
-            if (handle == new IntPtr(-1))
+            if (_handle == new IntPtr(-1))
                 ReportIOError(port_name);
 
             // Set port low level attributes
             SetAttributes(baud_rate, parity, data_bits, sb, hs);
 
             // Clean buffers and set sizes
-            if (!PurgeComm(handle, PurgeRxClear | PurgeTxClear) ||
-                    !SetupComm(handle, read_buffer_size, write_buffer_size))
+            if (!PurgeComm(_handle, PurgeRxClear | PurgeTxClear) ||
+                    !SetupComm(_handle, read_buffer_size, write_buffer_size))
                 ReportIOError(null);
 
             // Set timeouts
-            this.read_timeout = read_timeout;
-            this.write_timeout = write_timeout;
-            timeouts = new Timeouts(read_timeout, write_timeout);
-            if (!SetCommTimeouts(handle, ref timeouts))
+            _readTimeout = read_timeout;
+            _writeTimeout = write_timeout;
+            _timeouts = new Timeouts(read_timeout, write_timeout);
+            if (!SetCommTimeouts(_handle, ref _timeouts))
                 ReportIOError(null);
 
             /// Set DTR and RTS
@@ -211,17 +211,17 @@ namespace Mono.IO.Ports
 
             // Init overlapped structures
             NativeOverlapped wo = new NativeOverlapped();
-            write_event = new ManualResetEvent(false);
+            _writeEvent = new ManualResetEvent(false);
 #pragma warning disable 618
-            wo.EventHandle = write_event.Handle;
-            write_overlapped = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NativeOverlapped)));
-            Marshal.StructureToPtr(wo, write_overlapped, true);
+            wo.EventHandle = _writeEvent.Handle;
+            _writeOverlapped = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NativeOverlapped)));
+            Marshal.StructureToPtr(wo, _writeOverlapped, true);
 
             NativeOverlapped ro = new NativeOverlapped();
-            read_event = new ManualResetEvent(false);
-            ro.EventHandle = read_event.Handle;
-            read_overlapped = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NativeOverlapped)));
-            Marshal.StructureToPtr(ro, read_overlapped, true);
+            _readEvent = new ManualResetEvent(false);
+            ro.EventHandle = _readEvent.Handle;
+            _readOverlapped = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NativeOverlapped)));
+            Marshal.StructureToPtr(ro, _readOverlapped, true);
 #pragma warning restore 618
         }
 
@@ -261,18 +261,18 @@ namespace Mono.IO.Ports
         {
             get
             {
-                return read_timeout;
+                return _readTimeout;
             }
             set
             {
                 if (value < 0 && value != SerialPort.InfiniteTimeout)
                     throw new ArgumentOutOfRangeException("value");
 
-                timeouts.SetValues(value, write_timeout);
-                if (!SetCommTimeouts(handle, ref timeouts))
+                _timeouts.SetValues(value, _writeTimeout);
+                if (!SetCommTimeouts(_handle, ref _timeouts))
                     ReportIOError(null);
 
-                read_timeout = value;
+                _readTimeout = value;
             }
         }
 
@@ -280,18 +280,18 @@ namespace Mono.IO.Ports
         {
             get
             {
-                return write_timeout;
+                return _writeTimeout;
             }
             set
             {
                 if (value < 0 && value != SerialPort.InfiniteTimeout)
                     throw new ArgumentOutOfRangeException("value");
 
-                timeouts.SetValues(read_timeout, value);
-                if (!SetCommTimeouts(handle, ref timeouts))
+                _timeouts.SetValues(_readTimeout, value);
+                if (!SetCommTimeouts(_handle, ref _timeouts))
                     ReportIOError(null);
 
-                write_timeout = value;
+                _writeTimeout = value;
             }
         }
 
@@ -317,13 +317,13 @@ namespace Mono.IO.Ports
 
         protected override void Dispose(bool disposing)
         {
-            if (disposed)
+            if (_disposed)
                 return;
 
-            disposed = true;
-            CloseHandle(handle);
-            Marshal.FreeHGlobal(write_overlapped);
-            Marshal.FreeHGlobal(read_overlapped);
+            _disposed = true;
+            CloseHandle(_handle);
+            Marshal.FreeHGlobal(_writeOverlapped);
+            Marshal.FreeHGlobal(_readOverlapped);
         }
 
         void IDisposable.Dispose()
@@ -374,14 +374,14 @@ namespace Mono.IO.Ports
             {
                 fixed (byte* ptr = buffer)
                 {
-                    if (ReadFile(handle, ptr, buffer.Length, out bytes_read, read_overlapped))
+                    if (ReadFile(_handle, ptr, buffer.Length, out bytes_read, _readOverlapped))
                         return bytes_read;
 
                     // Test for overlapped behavior
                     if (Marshal.GetLastWin32Error() != FileIOPending)
                         ReportIOError(null);
 
-                    if (!GetOverlappedResult(handle, read_overlapped, ref bytes_read, true))
+                    if (!GetOverlappedResult(_handle, _readOverlapped, ref bytes_read, true))
                         ReportIOError(null);
 
                 }
@@ -419,13 +419,13 @@ namespace Mono.IO.Ports
             {
                 fixed (byte* ptr = buffer)
                 {
-                    if (WriteFile(handle, ptr, buffer.Length, out bytes_written, write_overlapped))
+                    if (WriteFile(_handle, ptr, buffer.Length, out bytes_written, _writeOverlapped))
                         return;
 
                     if (Marshal.GetLastWin32Error() != FileIOPending)
                         ReportIOError(null);
 
-                    if (!GetOverlappedResult(handle, write_overlapped, ref bytes_written, true))
+                    if (!GetOverlappedResult(_handle, _writeOverlapped, ref bytes_written, true))
                         ReportIOError(null);
                 }
             }
@@ -441,12 +441,12 @@ namespace Mono.IO.Ports
         {
             DCB dcb = new DCB { dcb_length = Marshal.SizeOf<DCB>() };
 
-            if (!GetCommState(handle, ref dcb))
+            if (!GetCommState(_handle, ref dcb))
                 ReportIOError(null);
 
             dcb.SetValues(baudRate, parity, dataBits, bits, hs);
 
-            if (!SetCommState(handle, ref dcb))
+            if (!SetCommState(_handle, ref dcb))
                 ReportIOError(null);
         }
 
@@ -474,20 +474,20 @@ namespace Mono.IO.Ports
 
         void CheckDisposed()
         {
-            if (disposed)
+            if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
         }
 
         // ISerialStream members
         public void DiscardInBuffer()
         {
-            if (!PurgeComm(handle, PurgeRxClear))
+            if (!PurgeComm(_handle, PurgeRxClear))
                 ReportIOError(null);
         }
 
         public void DiscardOutBuffer()
         {
-            if (!PurgeComm(handle, PurgeTxClear))
+            if (!PurgeComm(_handle, PurgeTxClear))
                 ReportIOError(null);
         }
 
@@ -497,7 +497,7 @@ namespace Mono.IO.Ports
             {
                 uint errors;
                 CommStat stat;
-                if (!ClearCommError(handle, out errors, out stat))
+                if (!ClearCommError(_handle, out errors, out stat))
                     ReportIOError(null);
 
                 return (int)stat.BytesIn;
@@ -510,7 +510,7 @@ namespace Mono.IO.Ports
             {
                 uint errors;
                 CommStat stat;
-                if (!ClearCommError(handle, out errors, out stat))
+                if (!ClearCommError(_handle, out errors, out stat))
                     ReportIOError(null);
 
                 return (int)stat.BytesOut;
@@ -520,7 +520,7 @@ namespace Mono.IO.Ports
         public SerialSignal GetSignals()
         {
             uint flags;
-            if (!GetCommModemStatus(handle, out flags))
+            if (!GetCommModemStatus(_handle, out flags))
                 ReportIOError(null);
 
             SerialSignal signals = SerialSignal.None;
@@ -551,13 +551,13 @@ namespace Mono.IO.Ports
                 else
                     flag = ClearDtr;
 
-            if (!EscapeCommFunction(handle, flag))
+            if (!EscapeCommFunction(_handle, flag))
                 ReportIOError(null);
         }
 
         public void SetBreakState(bool value)
         {
-            if (!EscapeCommFunction(handle, value ? SetBreak : ClearBreak))
+            if (!EscapeCommFunction(_handle, value ? SetBreak : ClearBreak))
                 ReportIOError(null);
         }
 
