@@ -15,9 +15,7 @@ using System.ComponentModel;
 
 namespace Mono.IO.Ports
 {
-#if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-#endif
     internal class WinSerialStream : Stream, ISerialStream, IDisposable
     {
         private readonly IntPtr _handle;
@@ -80,48 +78,18 @@ namespace Mono.IO.Ports
 #pragma warning restore 618
         }
 
-        public override bool CanRead
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public override bool CanSeek
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        public override bool CanTimeout
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public override bool CanWrite
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanTimeout => true;
+        public override bool CanWrite => true;
 
         public override int ReadTimeout
         {
-            get
-            {
-                return _readTimeout;
-            }
+            get => _readTimeout;
             set
             {
                 if (value < 0 && value != SerialPort.InfiniteTimeout)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 _timeouts.SetValues(value, _writeTimeout);
                 if (!NativeWindows.SetCommTimeouts(_handle, ref _timeouts))
@@ -133,14 +101,11 @@ namespace Mono.IO.Ports
 
         public override int WriteTimeout
         {
-            get
-            {
-                return _writeTimeout;
-            }
+            get => _writeTimeout;
             set
             {
                 if (value < 0 && value != SerialPort.InfiniteTimeout)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 _timeouts.SetValues(_readTimeout, value);
                 if (!NativeWindows.SetCommTimeouts(_handle, ref _timeouts))
@@ -150,24 +115,11 @@ namespace Mono.IO.Ports
             }
         }
 
-        public override long Length
-        {
-            get
-            {
-                throw new NotSupportedException();
-            }
-        }
-
+        public override long Length => throw new NotSupportedException();
         public override long Position
         {
-            get
-            {
-                throw new NotSupportedException();
-            }
-            set
-            {
-                throw new NotSupportedException();
-            }
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
         }
 
         protected override void Dispose(bool disposing)
@@ -217,11 +169,8 @@ namespace Mono.IO.Ports
         {
             CheckDisposed();
 
-            if (buffer.Length == 0)
+            if (buffer.IsEmpty)
                 return 0;
-
-            if (buffer.Length < 0)
-                throw new ArgumentOutOfRangeException("offset or count less than zero.");
 
             int bytes_read;
 
@@ -262,10 +211,7 @@ namespace Mono.IO.Ports
         {
             CheckDisposed();
 
-            if (buffer.Length < 0)
-                throw new ArgumentOutOfRangeException();
-
-            if (buffer.Length == 0)
+            if (buffer.IsEmpty)
                 return;
 
             int bytes_written = 0;
@@ -329,8 +275,7 @@ namespace Mono.IO.Ports
 
         void CheckDisposed()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(GetType().FullName);
+            ObjectDisposedException.ThrowIf(_disposed, this);
         }
 
         // ISerialStream members

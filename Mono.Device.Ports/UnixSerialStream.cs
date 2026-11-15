@@ -75,7 +75,7 @@ namespace Mono.IO.Ports
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            ArgumentNullException.ThrowIfNull(buffer);
             return Read(buffer.AsSpan(offset, count));
         }
 
@@ -89,7 +89,7 @@ namespace Mono.IO.Ports
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            ArgumentNullException.ThrowIfNull(buffer);
             Write(new ReadOnlySpan<byte>(buffer, offset, count));
         }
 

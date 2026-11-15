@@ -17,8 +17,10 @@ partial writes. A timed-out write may already have transmitted some bytes.
 
 ## Build on Linux
 
-Requires CMake 3.21+, a C compiler, Ninja (or another CMake generator), and a .NET
-SDK. The smoke tests target .NET 10. Kernel development headers enable Linux
+Requires CMake 3.21+, a C compiler, Ninja (or another CMake generator), and the .NET
+10 SDK or newer. The managed library uses C# 14 and PolyShim source polyfills to
+share modern APIs across both targets without a PolyShim runtime dependency.
+The smoke tests target .NET 10. Kernel development headers enable Linux
 custom baud rates (`linux-headers` on Alpine).
 
 ```sh

@@ -3,9 +3,7 @@ using System.Collections.Generic;
 
 namespace Mono.IO.Ports
 {
-#if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-#endif
     internal class WindowsComPortsEnumerator
     {
         public static List<string> GetPorts()

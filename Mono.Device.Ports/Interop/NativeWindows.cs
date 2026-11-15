@@ -6,9 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Mono.IO.Ports
 {
-#if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-#endif
     internal static partial class NativeWindows
     {
         // Windows API Constants

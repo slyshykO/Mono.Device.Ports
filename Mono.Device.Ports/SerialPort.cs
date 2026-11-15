@@ -99,8 +99,7 @@ namespace Mono.IO.Ports
 
         public SerialPort(IContainer container) : this()
         {
-            if (container == null)
-                throw new ArgumentNullException(nameof(container));
+            ArgumentNullException.ThrowIfNull(container);
 
             container.Add(this);
         }
@@ -143,7 +142,7 @@ namespace Mono.IO.Ports
             }
             else
             {
-                if (isUnix)
+                if (IsUnix)
                     return "ttyS0"; // Default for Unix
                 else if (IsWindows)
                     return "COM1"; // Default for Windows
@@ -338,8 +337,7 @@ namespace Mono.IO.Ports
             get => _newLine;
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
+                ArgumentNullException.ThrowIfNull(value);
                 if (value.Length == 0)
                     throw new ArgumentException("NewLine cannot be null or empty.", nameof(value));
 
@@ -386,8 +384,7 @@ namespace Mono.IO.Ports
             {
                 if (IsOpen)
                     throw new InvalidOperationException("Port name cannot be set while port is open.");
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
+                ArgumentNullException.ThrowIfNull(value);
                 if (value.Length == 0 || value.StartsWith(@"\\"))
                     throw new ArgumentException(null, nameof(value));
 
@@ -572,7 +569,7 @@ namespace Mono.IO.Ports
             var serialPorts = new List<string>();
 
             // Are we on Unix?
-            if (isUnix)
+            if (IsUnix)
             {
                 var ttys = Directory.GetFiles("/dev/", "tty*");
                 var linuxStyle = ttys.Any(dev => dev.StartsWith("/dev/ttyS") || dev.StartsWith("/dev/ttyUSB") || dev.StartsWith("/dev/ttyACM"));
@@ -599,26 +596,11 @@ namespace Mono.IO.Ports
             return serialPorts.ToArray();
         }
 
-        private static bool isUnix
-        {
-            get
-            {
-                var id = Environment.OSVersion.Platform;
-                return id == PlatformID.Unix || id == PlatformID.MacOSX;
-            }
-        }
+        private static bool IsUnix =>
+            Environment.OSVersion.Platform is PlatformID.Unix or PlatformID.MacOSX;
 
-#if NET6_0_OR_GREATER
         [System.Runtime.Versioning.SupportedOSPlatformGuard("windows")]
-#endif
-        private static bool IsWindows
-        {
-            get
-            {
-                var id = Environment.OSVersion.Platform;
-                return id == PlatformID.Win32Windows || id == PlatformID.Win32NT; // WinCE not supported
-            }
-        }
+        private static bool IsWindows => OperatingSystem.IsWindows();
 
         public void Open()
         {
@@ -628,7 +610,7 @@ namespace Mono.IO.Ports
             if (IsWindows) // Use windows kernel32 backend
                 _stream = new WinSerialStream(_portName, _baudRate, _dataBits, _parity, _stopBits, _dtrEnable,
                     _rtsEnable, _handshake, _readTimeout, _writeTimeout, _readBufferSize, _writeBufferSize);
-            else if (isUnix) // Use unix termios backend
+            else if (IsUnix) // Use unix termios backend
                 _stream = new UnixSerialStream(_portName, _baudRate, _dataBits, _parity, _stopBits, _dtrEnable,
                     _rtsEnable, _handshake, _readTimeout, _writeTimeout, _readBufferSize, _writeBufferSize);
             else
@@ -641,11 +623,8 @@ namespace Mono.IO.Ports
         {
             CheckOpen();
 
-            if (buffer.Length == 0)
+            if (buffer.IsEmpty)
                 return 0;
-
-            if (buffer.Length < 0)
-                throw new ArgumentOutOfRangeException(nameof(buffer), "buffer length less than zero.");
 
             return _stream?.Read(buffer) ?? throw new NullReferenceException("stream is null");
         }
@@ -659,8 +638,7 @@ namespace Mono.IO.Ports
         {
             CheckOpen();
 
-            if (buffer == null)
-                throw new ArgumentNullException(nameof(buffer));
+            ArgumentNullException.ThrowIfNull(buffer);
 
             if (offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset), $"offset less than zero, count = {count}.");
@@ -737,8 +715,7 @@ namespace Mono.IO.Ports
         public string ReadTo(string value)
         {
             CheckOpen();
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
+            ArgumentNullException.ThrowIfNull(value);
             if (value.Length == 0)
                 throw new ArgumentException("value");
 
@@ -770,8 +747,7 @@ namespace Mono.IO.Ports
         public void Write(string text)
         {
             CheckOpen();
-            if (text == null)
-                throw new ArgumentNullException(nameof(text));
+            ArgumentNullException.ThrowIfNull(text);
 
             var buffer = _encoding.GetBytes(text);
             Write(buffer, 0, buffer.Length);
@@ -781,17 +757,13 @@ namespace Mono.IO.Ports
         {
             CheckOpen();
 
-            if (buffer.Length < 0)
-                throw new ArgumentOutOfRangeException(nameof(buffer), "buffer length less than zero.");
-
             _stream?.Write(buffer);
         }
 
         public void Write(byte[] buffer, int offset, int count)
         {
             CheckOpen();
-            if (buffer == null)
-                throw new ArgumentNullException(nameof(buffer));
+            ArgumentNullException.ThrowIfNull(buffer);
 
             if (offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset), $"offset less than zero, count = {count}.");
@@ -808,8 +780,7 @@ namespace Mono.IO.Ports
         public void Write(char[] buffer, int offset, int count)
         {
             CheckOpen();
-            if (buffer == null)
-                throw new ArgumentNullException(nameof(buffer));
+            ArgumentNullException.ThrowIfNull(buffer);
 
             if (offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset), $"offset less than zero, count = {count}.");
