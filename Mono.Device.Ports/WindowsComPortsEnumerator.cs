@@ -10,7 +10,7 @@ namespace Mono.IO.Ports
     {
         public static List<string> GetPorts()
         {
-            var r = new List<string>();
+            var ports = new List<string>();
 
             try
             {
@@ -21,7 +21,7 @@ namespace Mono.IO.Ports
                     , NativeWindows.KeyEnumerateSubKeys | NativeWindows.KeyRead
                     , out var serialCommHkey);
                 if (errorCode != 0)
-                    return r;
+                    return ports;
 
                 try
                 {
@@ -31,7 +31,7 @@ namespace Mono.IO.Ports
                     {
                         var len = chArray.Length;
                         errorCode = NativeWindows.RegEnumValue(serialCommHkey
-                            , r.Count
+                            , ports.Count
                             , chArray
                             , ref len
                             , IntPtr.Zero
@@ -52,7 +52,7 @@ namespace Mono.IO.Ports
 
                         if (dataLen <= 0) continue;
                         var valueString = new string(chArray, 0, dataLen);
-                        r.Add(valueString);
+                        ports.Add(valueString);
                     }
                 }
                 finally
@@ -65,7 +65,7 @@ namespace Mono.IO.Ports
                 // paranoid catch.. if interop does not find the functions
             }
 
-            return r;
+            return ports;
         }
     }
 }
