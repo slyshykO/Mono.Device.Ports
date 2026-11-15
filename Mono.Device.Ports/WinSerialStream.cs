@@ -50,14 +50,14 @@ namespace Mono.IO.Ports
         const uint EvErr = 0x0080;
         const uint EvRing = 0x0100;
 
-        private IntPtr _handle;
+        private readonly IntPtr _handle;
         private int _readTimeout;
         private int _writeTimeout;
         private bool _disposed;
-        private IntPtr _writeOverlapped;
-        private IntPtr _readOverlapped;
-        private ManualResetEvent _readEvent;
-        private ManualResetEvent _writeEvent;
+        private readonly IntPtr _writeOverlapped;
+        private readonly IntPtr _readOverlapped;
+        private readonly ManualResetEvent _readEvent;
+        private readonly ManualResetEvent _writeEvent;
         private Timeouts _timeouts;
 
         // Native Windows API declarations
