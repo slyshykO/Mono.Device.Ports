@@ -98,6 +98,27 @@ appropriate build for the consuming application. Packing checks that the six def
 Linux assets exist, then includes the shared `runtimes/` tree. Package consumers
 do not need CMake or Zig; .NET selects the native asset for their runtime.
 
+If `dotnet pack` reports `Missing native helper`, complete the configure, build,
+and install steps below first. Configuring a preset alone does not create or
+stage the library.
+
+On Linux or WSL (Bash), run the packaging script. It requires CMake, Ninja, Zig,
+and the .NET SDK described above. It cleans, rebuilds, and installs all six native presets,
+then creates the Release NuGet and symbol packages in `artifacts/packages/`.
+It stops if any step fails and can be invoked from any working directory.
+
+```sh
+./scripts/pack.sh
+```
+
+Additional arguments are forwarded to `dotnet pack`, for example:
+
+```sh
+./scripts/pack.sh -p:Version=0.1.1
+```
+
+In PowerShell:
+
 ```powershell
 foreach ($rid in 'linux-x64','linux-arm64','linux-arm','linux-musl-x64','linux-musl-arm64','linux-musl-arm') {
     cmake --preset $rid
